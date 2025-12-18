@@ -1,0 +1,604 @@
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header */
+.app-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.description {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  max-width: 600px;
+}
+
+.network-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 6px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.network-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.network-dot.testnet {
+  background: var(--warning);
+}
+
+.network-dot.mainnet {
+  background: var(--success);
+}
+
+/* Wallet Connect */
+.connect-wallet-btn,
+.disconnect-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connect-wallet-btn {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.connect-wallet-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.connect-wallet-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.wallet-connected {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wallet-address {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.disconnect-btn {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.disconnect-btn:hover {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+/* Demo Container */
+.demo-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 640px) {
+  .demo-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Media Section */
+.media-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.media-section h2 {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.price-tag {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Media Container */
+.media-container {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease;
+}
+
+.media-container.locked {
+  background: #1a1a1a;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.media-container.locked:hover .paywall-button {
+  background: var(--accent-hover);
+}
+
+.media-container.unlocked {
+  background: #f5f5f5;
+  border: 1px solid var(--success);
+}
+
+/* Blurred content */
+.blurred {
+  filter: blur(20px) brightness(0.7);
+  transform: scale(1.1);
+  pointer-events: none;
+}
+
+/* Paywall Overlay */
+.paywall-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.paywall-content {
+  text-align: center;
+  color: white;
+}
+
+.paywall-icon {
+  margin-bottom: 16px;
+  opacity: 0.9;
+}
+
+.paywall-icon svg {
+  width: 48px;
+  height: 48px;
+}
+
+.paywall-text {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  opacity: 0.9;
+}
+
+.paywall-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.paywall-button:hover {
+  background: var(--accent-hover);
+}
+
+.x402-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Video & Image */
+.video-wrapper,
+.image-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.video-player {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  border-radius: 4px;
+  background: #000;
+  object-fit: contain;
+}
+
+.image-viewer {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.unlock-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--success);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Footer */
+.app-footer {
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.x402-info h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.x402-info ol {
+  margin: 0 0 16px 0;
+  padding-left: 20px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.x402-info li strong {
+  color: var(--text);
+}
+
+.whitepaper-link {
+  font-size: 14px;
+}
+
+/* Payment Modal */
+.payment-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.payment-modal {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.http-badge {
+  background: var(--error);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+}
+
+.close-btn:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.payment-details {
+  padding: 20px;
+}
+
+.payment-amount {
+  font-size: 32px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.payment-amount .currency {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+.payment-description {
+  text-align: center;
+  color: var(--text-secondary);
+  margin: 0 0 20px 0;
+  font-size: 14px;
+}
+
+.payment-info {
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 13px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row .label {
+  color: var(--text-muted);
+}
+
+.info-row .value {
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+}
+
+.info-row .value.address {
+  color: var(--accent);
+}
+
+.network-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Status Message */
+.status-message {
+  margin: 0 20px 16px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-message.connecting,
+.status-message.requesting,
+.status-message.signing,
+.status-message.confirming {
+  background: #fff8e6;
+  color: var(--warning);
+  border: 1px solid #ffe58f;
+}
+
+.status-message.success {
+  background: #f0fff4;
+  color: var(--success);
+  border: 1px solid #b7eb8f;
+}
+
+.status-message.error {
+  background: #fff2f0;
+  color: var(--error);
+  border: 1px solid #ffccc7;
+}
+
+/* Transaction Info */
+.transaction-info {
+  margin: 0 20px 16px;
+  padding: 10px 12px;
+  background: #f0fff4;
+  border-radius: 4px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.transaction-info .label {
+  color: var(--text-muted);
+}
+
+.tx-link {
+  color: var(--success);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Payment Actions */
+.payment-actions {
+  display: flex;
+  gap: 12px;
+  padding: 0 20px 20px;
+}
+
+.pay-button,
+.cancel-button,
+.connect-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+}
+
+.pay-button,
+.connect-btn {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.pay-button:hover:not(:disabled),
+.connect-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.pay-button:disabled,
+.connect-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-button {
+  background: var(--bg);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+.cancel-button:hover:not(:disabled) {
+  border-color: var(--text-muted);
+}
+
+.cancel-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal Footer */
+.x402-footer {
+  padding: 12px 20px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  border-radius: 0 0 8px 8px;
+}
+
+.x402-footer small {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* Spinner */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Icons */
+.wallet-icon,
+.pay-icon {
+  font-size: 14px;
+}
