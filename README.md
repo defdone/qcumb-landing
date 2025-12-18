@@ -1,6 +1,6 @@
 # x402 Payment Demo
 
-Demo implementacji protokołu x402 - standardu płatności opartego na HTTP 402 "Payment Required". Aplikacja pokazuje jak zaimplementować paywall dla mediów (video/image) z płatnościami USDC na sieci Base.
+Demo implementacji protokołu x402 - standardu płatności opartego na HTTP 402 "Payment Required". Aplikacja pokazuje jak zaimplementować paywall dla mediów (video/image) z płatnościami USDC na sieci Base Testnet.
 
 ## Architektura
 
