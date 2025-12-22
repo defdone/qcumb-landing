@@ -1,97 +1,222 @@
-# x402 Payment Demo
+# x402 Payment Flow - Frontend
 
-Demo implementacji protokołu x402 - standardu płatności opartego na HTTP 402 "Payment Required". Aplikacja pokazuje jak zaimplementować paywall dla mediów (video/image) z płatnościami USDC na sieci Base Testnet.
+Frontend application demonstrating the x402 payment protocol with real on-chain USDC payments via EIP-3009 (TransferWithAuthorization).
 
-## Architektura
+## Architecture
 
-```
-src/
-├── config/
-│   └── x402-config.ts      # konfiguracja sieci, USDC, cen
-├── hooks/
-│   └── use-x402-payment.ts # logika połączenia z portfelem i płatności
-├── components/
-│   ├── video-player.tsx    # komponent video z paywallem
-│   ├── image-viewer.tsx    # komponent image z paywallem
-│   ├── payment-modal.tsx   # modal płatności (HTTP 402 response)
-│   └── wallet-connect.tsx  # przycisk połączenia portfela
-└── App.tsx                 # główny komponent, zarządzanie stanem
-```
+This frontend connects to an x402-server backend that handles:
+- HTTP 402 responses with payment requirements
+- Payment verification via EIP-712 signatures
+- Settlement through the x402 facilitator
+- Media file serving with token-based access
 
-## Przepływ płatności
+### Payment Flow
 
-1. Użytkownik klika na zablokowane media
-2. Aplikacja generuje x402 Payment Request (symulacja HTTP 402)
-3. Modal pokazuje szczegóły płatności (kwota, odbiorca, sieć)
-4. Użytkownik zatwierdza transakcję w portfelu
-5. Aplikacja wysyła ERC-20 transfer USDC
-6. Po potwierdzeniu - media się odblokowują
+1. User clicks on locked content
+2. Frontend sends POST to `/media/:id/access`
+3. Backend returns HTTP 402 with `paymentRequired` object
+4. User signs EIP-712 authorization (EIP-3009)
+5. Frontend sends signed payload to backend
+6. Backend verifies and settles via facilitator
+7. Backend returns `mediaUrl` with access token
+8. Content is unlocked
 
-## Kluczowe elementy
+### Protocol Details
 
-### Połączenie z portfelem
+- **x402 Version**: 2
+- **Signature**: EIP-712 typed data (TransferWithAuthorization)
+- **Asset**: USDC (6 decimals)
+- **Network**: Base Sepolia (testnet) / Base (mainnet)
+- **Price**: $0.01 USDC per media item
 
-Hook `use-x402-payment.ts` używa `window.ethereum` (standard EIP-1193) do komunikacji z portfelami jak MetaMask czy Coinbase Wallet. Obsługuje:
-- żądanie dostępu do konta (`eth_requestAccounts`)
-- przełączanie sieci (`wallet_switchEthereumChain`)
-- dodawanie nowej sieci (`wallet_addEthereumChain`)
-- wysyłanie transakcji (`eth_sendTransaction`)
+## Features
 
-### Transfer USDC
+### Server Status Indicator
+- Real-time server connection status (online/offline)
+- Displays network name (Base Sepolia / Base Mainnet)
+- Auto-refreshes media when server comes back online
 
-USDC to token ERC-20. Transfer wymaga wywołania funkcji `transfer(address,uint256)` na kontrakcie USDC. Funkcja `encodeTransferData` w hooku koduje to wywołanie:
-- function selector: `0xa9059cbb`
-- adres odbiorcy: 32 bajty
-- kwota: 32 bajty (USDC ma 6 decimals)
+### Wallet Management
+- Connect/disconnect wallet functionality
+- Persists connection state across page refreshes
+- Manual disconnect prevents auto-reconnect until user clicks Connect again
+- Supports account switching in wallet extension
 
-### Persystencja sesji
+### Media Preview Security
+- Preview images/videos served from `/media/preview/:id` (server-side blur recommended)
+- Full content served with token after payment: `/media/:file?token=...`
+- Placeholder shown when server is offline
 
-Odblokowane treści są zapisywane w `sessionStorage` z kluczem powiązanym z adresem portfela. Każdy portfel ma osobną listę zakupów. Po odświeżeniu strony - zakupione treści pozostają odblokowane.
+### Payment Modal
+- Step-by-step progress indicator (Request → Sign → Settle → Done)
+- Real-time status updates during transaction
+- Explorer link after successful payment
+- Manual close - user controls when to dismiss
 
-## Konfiguracja
+### Per-Wallet Content Access
+- Unlocked content stored per wallet address in sessionStorage
+- Different wallets have separate unlock states
+- Switching wallets shows appropriate locked/unlocked state
 
-Zmienne środowiskowe (plik `.env`):
+## Setup
 
-```
-VITE_RECIPIENT_ADDRESS=0x...  # adres odbiorcy płatności
-VITE_USE_TESTNET=true         # true = Base Sepolia, false = Base Mainnet
-VITE_PRICE_VIDEO=1000         # cena w USDC (6 decimals)
-VITE_PRICE_IMAGE=1000
-```
+### Prerequisites
 
-## Adresy kontraktów USDC
+- Node.js 18+
+- MetaMask or Coinbase Wallet
+- USDC on Base Sepolia (for testing)
+- ETH on Base Sepolia (for gas)
 
-| Sieć | Adres |
-|------|-------|
-| Base Mainnet | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` |
-| Base Sepolia | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
-
-## Uruchomienie
+### Installation
 
 ```bash
-cp .env.example .env
-# edytuj .env - ustaw adres odbiorcy
-
 npm install
+cp .env.example .env
+```
+
+### Configuration
+
+Edit `.env`:
+
+```env
+# Backend API URL
+VITE_API_URL=http://localhost:3000
+```
+
+### Running
+
+Start the x402-server backend first (in another terminal):
+
+```bash
+# In x402-server directory
 npm run dev
 ```
 
-## Testowanie
+Then start this frontend:
 
-Do testów na Base Sepolia potrzebujesz:
-- ETH na gas: https://www.coinbase.com/faucets/base-ethereum-goerli-faucet
-- USDC testowe: https://faucet.circle.com/
+```bash
+npm run dev
+```
 
-## Ograniczenia
+Open http://localhost:5173
 
-To jest demo client-side. W produkcji:
-- weryfikacja płatności powinna być po stronie serwera
-- serwer powinien zwracać prawdziwy HTTP 402
-- treści powinny być serwowane dopiero po weryfikacji transakcji on-chain
+## Project Structure
 
-## Linki
+```
+src/
+  config/
+    x402-config.ts       # API config, types, formatters
+  hooks/
+    use-x402-payment.ts  # Payment logic, EIP-712 signing, wallet management
+  components/
+    video-player.tsx     # Video with paywall and server status handling
+    image-viewer.tsx     # Image with paywall and server status handling
+    payment-modal.tsx    # Payment UI with progress steps
+    payment-modal.css    # Payment modal styles
+    wallet-connect.tsx   # Wallet connection UI
+  App.tsx                # Main application
+  App.css                # Application styles
+```
 
-- [x402 Whitepaper](https://www.x402.org/x402-whitepaper.pdf)
-- [x402.org](https://www.x402.org/)
-- [Base Network](https://base.org/)
-- [EIP-1193 (Ethereum Provider)](https://eips.ethereum.org/EIPS/eip-1193)
+## API Endpoints
+
+### Preview (no auth required)
+```
+GET /media/preview/video
+GET /media/preview/image
+```
+
+### Request Payment Requirements
+```
+POST /media/video/access
+POST /media/image/access
+```
+
+### Response (HTTP 402)
+
+```json
+{
+  "success": false,
+  "error": "Payment Required",
+  "media": {
+    "id": "video",
+    "title": "Premium Video",
+    "type": "video",
+    "priceUsd": 0.01
+  },
+  "paymentRequired": {
+    "x402Version": 2,
+    "accepts": [{
+      "scheme": "exact",
+      "network": "eip155:84532",
+      "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "payTo": "0x...",
+      "amount": "10000"
+    }]
+  }
+}
+```
+
+### Submit Payment
+
+```json
+POST /media/video/access
+{
+  "message": {
+    "metadata": {
+      "x402.payment.payload": {
+        "x402Version": 2,
+        "resource": { ... },
+        "accepted": { ... },
+        "payload": {
+          "signature": "0x...",
+          "authorization": {
+            "from": "0x...",
+            "to": "0x...",
+            "value": "10000",
+            "validAfter": "0",
+            "validBefore": "...",
+            "nonce": "0x..."
+          }
+        }
+      },
+      "x402.payment.status": "payment-submitted"
+    }
+  }
+}
+```
+
+### Success Response
+
+```json
+{
+  "success": true,
+  "mediaUrl": "http://localhost:3000/media/video.mp4?token=...",
+  "mediaType": "video",
+  "grant": {
+    "id": "grant-...",
+    "mediaId": "video",
+    "payer": "0x...",
+    "expiresAt": 1234567890
+  },
+  "settlement": {
+    "success": true,
+    "transaction": "0x...",
+    "network": "eip155:84532"
+  }
+}
+```
+
+### Protected Media (with token)
+```
+GET /media/video.mp4?token=...
+GET /media/image.jpg?token=...
+```
+
+## Testnet Resources
+
+- Base Sepolia Faucet: https://www.coinbase.com/faucets/base-ethereum-sepolia-faucet
+- USDC Faucet: https://faucet.circle.com/
+- Block Explorer: https://sepolia.basescan.org
+
+Wszelkie prawa zastrzeżone. 2025 Defdone.

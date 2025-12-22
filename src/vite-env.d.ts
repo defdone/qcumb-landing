@@ -1,24 +1,24 @@
 /// <reference types="vite/client" />
 
-// Environment variables type definitions
 interface ImportMetaEnv {
-  readonly VITE_RECIPIENT_ADDRESS: string
-  readonly VITE_USE_TESTNET: string
-  readonly VITE_PRICE_VIDEO: string
-  readonly VITE_PRICE_IMAGE: string
+  readonly VITE_API_URL: string
 }
 
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
-// Extend Window interface for Ethereum provider (MetaMask, Coinbase Wallet, etc.)
-interface Window {
-  ethereum?: {
-    request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
-    on: (event: string, callback: (...args: unknown[]) => void) => void
-    removeListener: (event: string, callback: (...args: unknown[]) => void) => void
-    isMetaMask?: boolean
-    isCoinbaseWallet?: boolean
+// Ethereum provider types
+interface EthereumProvider {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
+  on?: (event: string, handler: (...args: unknown[]) => void) => void
+  removeListener?: (event: string, handler: (...args: unknown[]) => void) => void
+  isMetaMask?: boolean
+  isCoinbaseWallet?: boolean
+}
+
+declare global {
+  interface Window {
+    ethereum?: EthereumProvider
   }
 }

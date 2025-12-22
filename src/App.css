@@ -35,11 +35,17 @@
   max-width: 600px;
 }
 
-.network-badge {
+.status-badges {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.status-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 16px;
   padding: 6px 12px;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
@@ -48,18 +54,39 @@
   color: var(--text-secondary);
 }
 
-.network-dot {
+.status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
 }
 
-.network-dot.testnet {
+.status-dot.testnet {
   background: var(--warning);
 }
 
-.network-dot.mainnet {
+.status-dot.online {
   background: var(--success);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-dot.offline {
+  background: var(--error);
+}
+
+.status-dot.checking {
+  background: var(--text-muted);
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 currentColor;
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 0 4px transparent;
+  }
 }
 
 /* Wallet Connect */
@@ -297,6 +324,30 @@
   border-radius: 3px;
   font-size: 11px;
   font-weight: 500;
+}
+
+/* Media Placeholder (when server offline) */
+.media-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #1a1a1a;
+  border-radius: 6px;
+  color: #666;
+}
+
+.media-placeholder svg {
+  opacity: 0.4;
+}
+
+.media-placeholder span {
+  font-size: 13px;
+  color: #888;
 }
 
 /* Footer */
