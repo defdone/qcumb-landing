@@ -73,51 +73,37 @@ function App() {
     }
   }, [])
 
-  // Check server status - runs on mount only
+  // Check server status - runs ONCE on mount, no polling
   useEffect(() => {
-    let wasOffline = true
     let isMounted = true
 
     const checkServer = async () => {
       try {
         const response = await fetch(`${API_URL}/health`, { 
           method: 'GET',
-          signal: AbortSignal.timeout(3000)
+          signal: AbortSignal.timeout(5000)
         })
         if (!isMounted) return
         
         if (response.ok) {
           const data = await response.json()
           const network = data?.payment?.network || data?.network || null
-          
-          // If server just came online, refresh media list once
-          if (wasOffline) {
-            setMediaKey(prev => prev + 1)
-            fetchMediaList()
-          }
-          
           setServerStatus({ online: true, network })
-          wasOffline = false
+          fetchMediaList()
         } else {
           setServerStatus({ online: false, network: null })
-          wasOffline = true
         }
       } catch {
         if (!isMounted) return
         setServerStatus({ online: false, network: null })
-        wasOffline = true
       }
     }
 
-    // Initial fetch
+    // Single check on mount - NO POLLING
     checkServer()
-    
-    // Check server status every 10 seconds (reduced from 5s)
-    const interval = setInterval(checkServer, 10000)
     
     return () => {
       isMounted = false
-      clearInterval(interval)
     }
   }, [fetchMediaList])
 

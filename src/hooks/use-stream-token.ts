@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { API_URL } from '../config/x402-config'
 
 export interface StreamToken {
@@ -31,16 +31,7 @@ export const useStreamToken = (
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const currentAssetId = useRef<string | null>(null)
-  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Clear refresh timer on unmount
-  useEffect(() => {
-    return () => {
-      if (refreshTimerRef.current) {
-        clearTimeout(refreshTimerRef.current)
-      }
-    }
-  }, [])
+  const isFetching = useRef(false) // Prevent concurrent fetches
 
   // Check if current token is still valid
   const isTokenValid = useCallback((): boolean => {
@@ -56,8 +47,14 @@ export const useStreamToken = (
     ? `${API_URL}/stream/${currentAssetId.current}?token=${streamToken.token}`
     : null
 
-  // Fetch new stream token
+  // Fetch new stream token - with deduplication
   const fetchStreamToken = useCallback(async (assetId: string): Promise<string | null> => {
+    // Prevent concurrent fetches
+    if (isFetching.current) {
+      console.log('[StreamToken] Already fetching, skipping...')
+      return null
+    }
+
     const sessionHeader = getSessionHeader()
     
     if (!sessionHeader['X-Wallet-Session']) {
@@ -65,6 +62,7 @@ export const useStreamToken = (
       return null
     }
 
+    isFetching.current = true
     setIsLoading(true)
     setError(null)
 
@@ -103,17 +101,7 @@ export const useStreamToken = (
       setStreamToken(token)
       currentAssetId.current = assetId
 
-      // Set up auto-refresh for long videos (refresh at 75% of token lifetime)
-      if (refreshTimerRef.current) {
-        clearTimeout(refreshTimerRef.current)
-      }
-      
-      const refreshTime = token.expiresIn * 0.75 * 1000 // 75% of lifetime
-      refreshTimerRef.current = setTimeout(() => {
-        console.log('[StreamToken] Auto-refreshing token...')
-        fetchStreamToken(assetId)
-      }, refreshTime)
-
+      // NO auto-refresh - user triggers refresh on seeking if needed
       return `${API_URL}/stream/${assetId}?token=${token.token}`
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Stream token error'
@@ -122,27 +110,27 @@ export const useStreamToken = (
       return null
     } finally {
       setIsLoading(false)
+      isFetching.current = false
     }
   }, [getSessionHeader])
 
-  // Refresh current token
+  // Refresh current token - only when explicitly called
   const refreshToken = useCallback(async (): Promise<string | null> => {
     if (!currentAssetId.current) {
       setError('No asset to refresh')
       return null
     }
+    // Clear current token first to force re-fetch
+    setStreamToken(null)
     return fetchStreamToken(currentAssetId.current)
   }, [fetchStreamToken])
 
   // Clear token
   const clearToken = useCallback(() => {
-    if (refreshTimerRef.current) {
-      clearTimeout(refreshTimerRef.current)
-      refreshTimerRef.current = null
-    }
     setStreamToken(null)
     currentAssetId.current = null
     setError(null)
+    isFetching.current = false
   }, [])
 
   return {
@@ -156,4 +144,3 @@ export const useStreamToken = (
     isTokenValid
   }
 }
-
