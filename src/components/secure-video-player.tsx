@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
-import { API_URL } from '../config/x402-config'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useStreamToken } from '../hooks/use-stream-token'
 
 interface SecureVideoPlayerProps {
@@ -9,7 +8,7 @@ interface SecureVideoPlayerProps {
   onPaymentRequest: () => void
   serverOnline?: boolean | null
   getSessionHeader: () => Record<string, string>
-  previewUrl?: string // Direct Supabase URL for preview
+  previewUrl?: string // Direct Supabase URL for preview (from /media API)
 }
 
 const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
@@ -19,12 +18,12 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
   onPaymentRequest,
   serverOnline,
   getSessionHeader,
-  previewUrl: externalPreviewUrl
+  previewUrl
 }) => {
   const [hasError, setHasError] = useState(false)
   const [isLoadingStream, setIsLoadingStream] = useState(false)
-  const [fetchedPreviewUrl, setFetchedPreviewUrl] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const hasTriedFetch = useRef(false)
   
   const { 
     streamUrl, 
@@ -34,25 +33,10 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
     refreshToken
   } = useStreamToken(getSessionHeader)
 
-  // Fetch preview URL from API if not provided
+  // Fetch stream token when user has access - only once
   useEffect(() => {
-    if (!externalPreviewUrl && isLocked) {
-      fetch(`${API_URL}/media/preview/${assetId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.previewUrl) {
-            setFetchedPreviewUrl(data.previewUrl)
-          }
-        })
-        .catch(err => {
-          console.error('[SecureVideo] Failed to fetch preview URL:', err)
-        })
-    }
-  }, [assetId, externalPreviewUrl, isLocked])
-
-  // Fetch stream token when user has access and wants to play
-  useEffect(() => {
-    if (hasAccess && !isLocked && !streamUrl) {
+    if (hasAccess && !isLocked && !streamUrl && !hasTriedFetch.current) {
+      hasTriedFetch.current = true
       setIsLoadingStream(true)
       fetchStreamToken(assetId).finally(() => {
         setIsLoadingStream(false)
@@ -62,28 +46,27 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
     // Clear token when locked
     if (isLocked) {
       clearToken()
+      hasTriedFetch.current = false
     }
-  }, [hasAccess, isLocked, assetId, fetchStreamToken, clearToken, streamUrl])
+  }, [hasAccess, isLocked, assetId]) // Removed streamUrl, fetchStreamToken, clearToken to prevent loops
 
   // Handle seeking - refresh token if needed
-  const handleSeeking = async () => {
+  const handleSeeking = useCallback(async () => {
     if (!isTokenValid()) {
       console.log('[SecureVideo] Token expired, refreshing...')
       await refreshToken()
     }
-  }
+  }, [isTokenValid, refreshToken])
 
-  const handleClick = (): void => {
+  const handleClick = useCallback((): void => {
     if (isLocked && serverOnline) {
       onPaymentRequest()
     }
-  }
+  }, [isLocked, serverOnline, onPaymentRequest])
 
-  // Preview URL - use external, fetched, or fallback
-  const previewUrl = externalPreviewUrl || fetchedPreviewUrl || `${API_URL}/media/preview/${assetId}`
-  
+  // Use previewUrl from props (from /media API), no fallback fetch needed
   // Use stream URL when unlocked and available, otherwise preview
-  const videoSrc = !isLocked && streamUrl ? streamUrl : previewUrl
+  const videoSrc = !isLocked && streamUrl ? streamUrl : (previewUrl || '')
 
   const showPlaceholder = serverOnline === false || hasError
   const showLoading = isLoadingStream && hasAccess && !isLocked

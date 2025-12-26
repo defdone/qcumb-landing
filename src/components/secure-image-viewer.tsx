@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import { API_URL } from '../config/x402-config'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useStreamToken } from '../hooks/use-stream-token'
 
 interface SecureImageViewerProps {
@@ -9,7 +8,7 @@ interface SecureImageViewerProps {
   onPaymentRequest: () => void
   serverOnline?: boolean | null
   getSessionHeader: () => Record<string, string>
-  previewUrl?: string // Direct Supabase URL for preview
+  previewUrl?: string // Direct Supabase URL for preview (from /media API)
 }
 
 const SecureImageViewer: React.FC<SecureImageViewerProps> = ({
@@ -19,11 +18,11 @@ const SecureImageViewer: React.FC<SecureImageViewerProps> = ({
   onPaymentRequest,
   serverOnline,
   getSessionHeader,
-  previewUrl: externalPreviewUrl
+  previewUrl
 }) => {
   const [hasError, setHasError] = useState(false)
   const [isLoadingStream, setIsLoadingStream] = useState(false)
-  const [fetchedPreviewUrl, setFetchedPreviewUrl] = useState<string | null>(null)
+  const hasTriedFetch = useRef(false)
   
   const { 
     streamUrl, 
@@ -31,25 +30,10 @@ const SecureImageViewer: React.FC<SecureImageViewerProps> = ({
     clearToken 
   } = useStreamToken(getSessionHeader)
 
-  // Fetch preview URL from API if not provided
+  // Fetch stream token when user has access - only once
   useEffect(() => {
-    if (!externalPreviewUrl && isLocked) {
-      fetch(`${API_URL}/media/preview/${assetId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.previewUrl) {
-            setFetchedPreviewUrl(data.previewUrl)
-          }
-        })
-        .catch(err => {
-          console.error('[SecureImage] Failed to fetch preview URL:', err)
-        })
-    }
-  }, [assetId, externalPreviewUrl, isLocked])
-
-  // Fetch stream token when user has access
-  useEffect(() => {
-    if (hasAccess && !isLocked && !streamUrl) {
+    if (hasAccess && !isLocked && !streamUrl && !hasTriedFetch.current) {
+      hasTriedFetch.current = true
       setIsLoadingStream(true)
       fetchStreamToken(assetId).finally(() => {
         setIsLoadingStream(false)
@@ -59,22 +43,21 @@ const SecureImageViewer: React.FC<SecureImageViewerProps> = ({
     // Clear token when locked
     if (isLocked) {
       clearToken()
+      hasTriedFetch.current = false
     }
-  }, [hasAccess, isLocked, assetId, fetchStreamToken, clearToken, streamUrl])
+  }, [hasAccess, isLocked, assetId]) // Removed dependencies that cause loops
 
-  const handleClick = (): void => {
+  const handleClick = useCallback((): void => {
     if (isLocked && serverOnline) {
       onPaymentRequest()
     }
-  }
+  }, [isLocked, serverOnline, onPaymentRequest])
 
-  // Preview URL - use external, fetched, or fallback
-  const previewUrl = externalPreviewUrl || fetchedPreviewUrl || `${API_URL}/media/preview/${assetId}`
-  
+  // Use previewUrl from props (from /media API), no fallback fetch needed
   // Use stream URL when unlocked and available, otherwise preview
-  const imageSrc = !isLocked && streamUrl ? streamUrl : previewUrl
+  const imageSrc = !isLocked && streamUrl ? streamUrl : (previewUrl || '')
 
-  const showPlaceholder = serverOnline === false || hasError
+  const showPlaceholder = serverOnline === false || hasError || !imageSrc
   const showLoading = isLoadingStream && hasAccess && !isLocked
 
   return (
@@ -89,7 +72,7 @@ const SecureImageViewer: React.FC<SecureImageViewerProps> = ({
             <circle cx="8.5" cy="8.5" r="1.5"/>
             <polyline points="21 15 16 10 5 21"/>
           </svg>
-          <span>{serverOnline === false ? 'Server Offline' : 'Failed to load'}</span>
+          <span>{serverOnline === false ? 'Server Offline' : 'Loading...'}</span>
         </div>
       ) : showLoading ? (
         <div className="media-placeholder loading">
@@ -132,4 +115,3 @@ const SecureImageViewer: React.FC<SecureImageViewerProps> = ({
 }
 
 export default SecureImageViewer
-

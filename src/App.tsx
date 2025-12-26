@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import SecureVideoPlayer from './components/secure-video-player'
 import SecureImageViewer from './components/secure-image-viewer'
 import PaymentModal from './components/payment-modal'
@@ -58,16 +58,10 @@ function App() {
     setSelectedPlan
   } = useX402Payment()
 
-  // Fetch media list from API
-  const fetchMediaList = async () => {
+  // Fetch media list from API - called only once on mount and when server comes online
+  const fetchMediaList = useCallback(async () => {
     try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-      const sessionHeader = getSessionHeader()
-      if (sessionHeader['X-Wallet-Session']) {
-        headers['X-Wallet-Session'] = sessionHeader['X-Wallet-Session']
-      }
-      
-      const response = await fetch(`${API_URL}/media`, { headers })
+      const response = await fetch(`${API_URL}/media`)
       if (response.ok) {
         const data = await response.json()
         if (data.media) {
@@ -77,11 +71,12 @@ function App() {
     } catch (err) {
       console.error('[App] Failed to fetch media list:', err)
     }
-  }
+  }, [])
 
-  // Check server status
+  // Check server status - runs on mount only
   useEffect(() => {
-    let wasOffline = serverStatus.online === false || serverStatus.online === null
+    let wasOffline = true
+    let isMounted = true
 
     const checkServer = async () => {
       try {
@@ -89,11 +84,13 @@ function App() {
           method: 'GET',
           signal: AbortSignal.timeout(3000)
         })
+        if (!isMounted) return
+        
         if (response.ok) {
           const data = await response.json()
           const network = data?.payment?.network || data?.network || null
           
-          // If server just came online, refresh media components
+          // If server just came online, refresh media list once
           if (wasOffline) {
             setMediaKey(prev => prev + 1)
             fetchMediaList()
@@ -106,16 +103,23 @@ function App() {
           wasOffline = true
         }
       } catch {
+        if (!isMounted) return
         setServerStatus({ online: false, network: null })
         wasOffline = true
       }
     }
 
+    // Initial fetch
     checkServer()
-    fetchMediaList()
-    const interval = setInterval(checkServer, 5000)
-    return () => clearInterval(interval)
-  }, [])
+    
+    // Check server status every 10 seconds (reduced from 5s)
+    const interval = setInterval(checkServer, 10000)
+    
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
+  }, [fetchMediaList])
 
   // Auto-authenticate when wallet connects
   useEffect(() => {
