@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import SecureVideoPlayer from './components/secure-video-player'
 import SecureImageViewer from './components/secure-image-viewer'
 import PaymentModal from './components/payment-modal'
@@ -16,6 +16,7 @@ interface MediaInfo {
     '24h': { price: number; priceFormatted: string }
     '7d': { price: number; priceFormatted: string }
   }
+  hasAccess?: boolean // Set by backend when X-Wallet-Session header is present
 }
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
   }>({ online: null, network: null })
   const [mediaKey, setMediaKey] = useState(0) // Key to force re-render media components
   const [mediaList, setMediaList] = useState<MediaInfo[]>([]) // Media list from API
+  const previousWalletAddress = useRef<string | null>(null) // Track wallet address changes
 
   // Wallet session hook for authentication
   const {
@@ -56,20 +58,35 @@ function App() {
     setSelectedPlan
   } = useX402Payment()
 
-  // Fetch media list from API - called only once on mount and when server comes online
+  // Fetch media list from API - sends X-Wallet-Session header if authenticated
   const fetchMediaList = useCallback(async () => {
     try {
-      const response = await fetch(`${API_URL}/media`)
+      const headers: Record<string, string> = {}
+      const sessionHeader = getSessionHeader()
+      if (sessionHeader['X-Wallet-Session']) {
+        headers['X-Wallet-Session'] = sessionHeader['X-Wallet-Session']
+        console.log('[App] Fetching media list WITH session header')
+      } else {
+        console.log('[App] Fetching media list WITHOUT session header')
+      }
+      
+      const response = await fetch(`${API_URL}/media`, { headers })
       if (response.ok) {
         const data = await response.json()
         if (data.media) {
+          console.log('[App] Media list received:', data.media.map((m: MediaInfo) => ({
+            id: m.id,
+            hasAccess: m.hasAccess
+          })))
           setMediaList(data.media)
         }
+      } else {
+        console.error('[App] Failed to fetch media list:', response.status, response.statusText)
       }
     } catch (err) {
       console.error('[App] Failed to fetch media list:', err)
     }
-  }, [])
+  }, [getSessionHeader])
 
   // Check server status - runs ONCE on mount, no polling
   useEffect(() => {
@@ -105,30 +122,101 @@ function App() {
     }
   }, [fetchMediaList])
 
-  // Refresh entitlements after successful payment
+  // Refresh entitlements and media list after successful payment
   useEffect(() => {
     if (paymentStatus === 'success') {
-      console.log('[App] Payment success, refreshing entitlements...')
+      console.log('[App] Payment success, refreshing entitlements and media list...')
       fetchEntitlements()
+      fetchMediaList()
       // Force re-render media components to fetch new stream tokens
       setMediaKey(prev => prev + 1)
     }
-  }, [paymentStatus, fetchEntitlements])
+  }, [paymentStatus, fetchEntitlements, fetchMediaList])
 
-  // Handle wallet connect with authentication
+  // Auto-authenticate when wallet is connected but not authenticated
+  // This runs immediately when walletAddress changes (after connect or reconnect)
+  useEffect(() => {
+    const walletChanged = previousWalletAddress.current !== walletAddress
+    const walletJustConnected = walletChanged && walletAddress !== null && previousWalletAddress.current === null
+    
+    if (walletJustConnected || (walletAddress && !isAuthenticated && !isAuthenticating && serverStatus.online)) {
+      console.log('[App] Wallet connected, auto-authenticating...', walletAddress, 'walletJustConnected:', walletJustConnected)
+      let cancelled = false
+      
+      authenticate(walletAddress!)
+        .then((success) => {
+          if (cancelled) return
+          if (success) {
+            console.log('[App] Auto-authentication successful, refreshing media list...')
+            // Refresh media list after authentication with a small delay to ensure session is set
+            setTimeout(() => {
+              if (!cancelled) {
+                fetchMediaList()
+              }
+            }, 200)
+          } else {
+            console.log('[App] Auto-authentication failed')
+          }
+        })
+        .catch((err) => {
+          if (!cancelled) {
+            console.error('[App] Auto-authentication error:', err)
+          }
+        })
+      
+      previousWalletAddress.current = walletAddress
+      
+      return () => {
+        cancelled = true
+      }
+    } else if (walletChanged) {
+      // Update ref even if we don't authenticate (e.g., wallet disconnected)
+      previousWalletAddress.current = walletAddress
+    }
+  }, [walletAddress, isAuthenticated, isAuthenticating, authenticate, serverStatus.online, fetchMediaList])
+
+  // Refresh media list when session changes (connect/disconnect) or after authentication
+  useEffect(() => {
+    if (serverStatus.online && isAuthenticated) {
+      console.log('[App] Session authenticated, refreshing media list. isAuthenticated:', isAuthenticated)
+      // Small delay to ensure session token is available in getSessionHeader
+      const timeoutId = setTimeout(() => {
+        fetchMediaList()
+      }, 100)
+      return () => clearTimeout(timeoutId)
+    } else if (serverStatus.online && !isAuthenticated) {
+      // When disconnected, refresh without header
+      console.log('[App] Session disconnected, refreshing media list without header')
+      fetchMediaList()
+    }
+  }, [isAuthenticated, fetchMediaList, serverStatus.online])
+
+  // Handle wallet connect - authentication will happen automatically via useEffect
   const handleConnect = async () => {
     await connectWallet()
+    // Authentication will be triggered by useEffect when walletAddress changes
   }
 
   // Handle disconnect - clear both wallet and session
   const handleDisconnect = () => {
     sessionLogout()
     disconnectWallet()
+    // Refresh media list without session header (all will have hasAccess: false)
+    setTimeout(() => {
+      fetchMediaList()
+    }, 100)
   }
 
-  // Check if user has access to media
-  const hasVideoAccess = hasAccessTo('video')
-  const hasImageAccess = hasAccessTo('image')
+  // Check if user has access to media - prioritize hasAccess from API response
+  // If hasAccess is undefined (not yet loaded), fallback to entitlements check
+  const videoMedia = mediaList.find(m => m.id === 'video')
+  const imageMedia = mediaList.find(m => m.id === 'image')
+  const hasVideoAccess = videoMedia?.hasAccess !== undefined 
+    ? videoMedia.hasAccess 
+    : hasAccessTo('video')
+  const hasImageAccess = imageMedia?.hasAccess !== undefined 
+    ? imageMedia.hasAccess 
+    : hasAccessTo('image')
 
   const handlePaymentRequest = async (mediaType: 'video' | 'image') => {
     setCurrentMediaType(mediaType)
