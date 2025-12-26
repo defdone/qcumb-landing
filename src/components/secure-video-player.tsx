@@ -33,6 +33,13 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
     refreshToken
   } = useStreamToken(getSessionHeader)
 
+  // Reset error when previewUrl changes
+  useEffect(() => {
+    if (previewUrl) {
+      setHasError(false)
+    }
+  }, [previewUrl])
+
   // Fetch stream token when user has access - only once
   useEffect(() => {
     if (hasAccess && !isLocked && !streamUrl && !hasTriedFetch.current) {
@@ -68,13 +75,19 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
   // Use stream URL when unlocked and available, otherwise preview
   const videoSrc = !isLocked && streamUrl ? streamUrl : (previewUrl || '')
 
-  const showPlaceholder = serverOnline === false || hasError
+  // Show placeholder only if server offline, or if we have a src but it failed to load
+  const showPlaceholder = serverOnline === false || (hasError && videoSrc)
   const showLoading = isLoadingStream && hasAccess && !isLocked
+  
+  // If no videoSrc yet (mediaList not loaded), show loading state
+  const showWaiting = !videoSrc && !showPlaceholder && isLocked
 
   return (
     <div 
       className={`media-container ${isLocked ? 'locked' : 'unlocked'}`} 
       onClick={isLocked ? handleClick : undefined}
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
     >
       {showPlaceholder ? (
         <div className="media-placeholder">
@@ -83,6 +96,14 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
             <polygon points="10 8 16 12 10 16 10 8"/>
           </svg>
           <span>{serverOnline === false ? 'Server Offline' : 'Failed to load'}</span>
+        </div>
+      ) : showWaiting ? (
+        <div className="media-placeholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
+            <polygon points="10 8 16 12 10 16 10 8"/>
+          </svg>
+          <span>Loading preview...</span>
         </div>
       ) : showLoading ? (
         <div className="media-placeholder loading">
@@ -93,8 +114,17 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
         <video
           ref={videoRef}
           controls={!isLocked}
-          onError={() => setHasError(true)}
-          onLoadedData={() => setHasError(false)}
+          controlsList="nodownload noplaybackrate"
+          disablePictureInPicture
+          onContextMenu={(e) => e.preventDefault()}
+          onError={(e) => {
+            console.error('[SecureVideo] Video error:', e, 'src:', videoSrc)
+            setHasError(true)
+          }}
+          onLoadedData={() => {
+            console.log('[SecureVideo] Video loaded successfully')
+            setHasError(false)
+          }}
           onSeeking={handleSeeking}
           className={`video-player ${isLocked ? 'blurred' : ''}`}
           autoPlay={isLocked}

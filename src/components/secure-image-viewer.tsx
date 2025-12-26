@@ -64,6 +64,8 @@ const SecureImageViewer: React.FC<SecureImageViewerProps> = ({
     <div 
       className={`media-container ${isLocked ? 'locked' : 'unlocked'}`} 
       onClick={isLocked ? handleClick : undefined}
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
     >
       {showPlaceholder ? (
         <div className="media-placeholder">
@@ -86,6 +88,9 @@ const SecureImageViewer: React.FC<SecureImageViewerProps> = ({
           className={`image-viewer ${isLocked ? 'blurred' : ''}`}
           onError={() => setHasError(true)}
           onLoad={() => setHasError(false)}
+          onContextMenu={(e) => e.preventDefault()}
+          onDragStart={(e) => e.preventDefault()}
+          draggable={false}
         />
       )}
       

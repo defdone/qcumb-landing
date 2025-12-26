@@ -206,6 +206,12 @@
   align-items: center;
   justify-content: center;
   transition: border-color 0.15s ease;
+  /* Prevent content selection and saving */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .media-container.locked {
