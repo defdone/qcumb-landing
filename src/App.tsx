@@ -105,14 +105,6 @@ function App() {
     }
   }, [fetchMediaList])
 
-  // Auto-authenticate when wallet connects
-  useEffect(() => {
-    if (walletAddress && !isAuthenticated && !isAuthenticating) {
-      console.log('[App] Wallet connected, authenticating...')
-      authenticate(walletAddress)
-    }
-  }, [walletAddress, isAuthenticated, isAuthenticating, authenticate])
-
   // Refresh entitlements after successful payment
   useEffect(() => {
     if (paymentStatus === 'success') {
