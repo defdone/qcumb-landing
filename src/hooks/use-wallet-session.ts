@@ -36,17 +36,16 @@ export interface UseWalletSessionResult {
 const STORAGE_KEY = 'x402_wallet_session'
 
 // Load session from localStorage
+// Don't check expiration date here - let the server verify it
+// The server is the source of truth for session validity
 const loadSession = (): WalletSession | null => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
       const session = JSON.parse(saved) as WalletSession
-      // Check if expired
-      if (new Date(session.expiresAt) > new Date()) {
-        return session
-      }
-      // Clear expired session
-      localStorage.removeItem(STORAGE_KEY)
+      // Return session even if expired locally - server will verify
+      // This allows server to potentially extend session validity
+      return session
     }
   } catch {
     localStorage.removeItem(STORAGE_KEY)
@@ -254,9 +253,14 @@ export const useWalletSession = (): UseWalletSessionResult => {
   // Verify session on mount - runs ONCE
   useEffect(() => {
     const currentSession = loadSession() // Read from localStorage directly
+    console.log('[Session] Checking for existing session on mount...', currentSession ? 'Found session' : 'No session found')
     if (currentSession) {
       setIsVerifyingSession(true)
-      console.log('[Session] Verifying existing session from localStorage...')
+      console.log('[Session] Verifying existing session from localStorage...', {
+        walletAddress: currentSession.walletAddress,
+        expiresAt: currentSession.expiresAt,
+        tokenPreview: currentSession.sessionToken.substring(0, 20) + '...'
+      })
       // Verify session is still valid on server
       fetch(`${API_URL}/wallet/session`, {
         headers: { 'X-Wallet-Session': currentSession.sessionToken }
@@ -277,9 +281,15 @@ export const useWalletSession = (): UseWalletSessionResult => {
           if (!data) return // Already handled error case
           
           if (data.authenticated) {
-            // Session valid, fetch entitlements
+            // Session valid, update session with any new expiry date from server
             console.log('[Session] Session valid, fetching entitlements...')
-            setSession(currentSession) // Ensure session is set in state
+            const updatedSession: WalletSession = {
+              ...currentSession,
+              // Update expiresAt if server provided a new one
+              expiresAt: data.expiresAt || currentSession.expiresAt
+            }
+            setSession(updatedSession)
+            saveSession(updatedSession) // Save updated session to localStorage
             fetchEntitlementsInternal(currentSession.sessionToken)
           } else {
             // Session invalid according to server
