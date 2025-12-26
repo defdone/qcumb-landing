@@ -187,18 +187,21 @@ function App() {
     setSelectedPlan(plan)
   }
 
-  // Get display price - show range "from $X" based on media pricing
+  // Get display price based on selected plan
   const getDisplayPrice = (mediaId: string) => {
     const media = mediaList.find(m => m.id === mediaId)
     if (media?.pricing) {
-      const minPrice = Math.min(media.pricing['24h'].price, media.pricing['7d'].price)
-      return `from $${minPrice.toFixed(2)}`
+      return media.pricing[selectedPlan].priceFormatted
     }
     if (pricing) {
-      const minPrice = Math.min(pricing['24h'].price, pricing['7d'].price)
-      return `from $${minPrice.toFixed(2)}`
+      return pricing[selectedPlan].priceFormatted
     }
-    return 'from $0.01'
+    return selectedPlan === '24h' ? '$0.01' : '$0.02'
+  }
+  
+  // Get plan label for display
+  const getPlanLabel = () => {
+    return selectedPlan === '24h' ? '24h' : '7 days'
   }
 
   return (
@@ -251,7 +254,7 @@ function App() {
             {hasVideoAccess ? (
               <span className="access-badge">Access Granted</span>
             ) : (
-              <>{getDisplayPrice('video')} USDC</>
+              <>{getDisplayPrice('video')} <span className="plan-label">/ {getPlanLabel()}</span></>
             )}
           </p>
           <SecureVideoPlayer
@@ -272,7 +275,7 @@ function App() {
             {hasImageAccess ? (
               <span className="access-badge">Access Granted</span>
             ) : (
-              <>{getDisplayPrice('image')} USDC</>
+              <>{getDisplayPrice('image')} <span className="plan-label">/ {getPlanLabel()}</span></>
             )}
           </p>
           <SecureImageViewer

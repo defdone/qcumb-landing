@@ -183,12 +183,12 @@
 .price-tag {
   margin: 0 0 12px 0;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text);
   flex-shrink: 0;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.price-tag .from-label {
+.price-tag .plan-label {
   font-weight: 400;
   color: var(--text-muted);
   font-size: 12px;
