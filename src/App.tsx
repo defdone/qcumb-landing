@@ -48,7 +48,6 @@ function App() {
     authenticate,
     logout: sessionLogout,
     fetchEntitlements,
-    hasAccessTo,
     getSessionHeader
   } = useWalletSession()
 

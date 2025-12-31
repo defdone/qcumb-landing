@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { 
   API_URL, 
-  MEDIA_IDS,
   PaymentRequirements,
   PaymentRequiredResponse,
   PaymentSuccessResponse,
@@ -83,6 +82,7 @@ export const useX402Payment = (): UseX402PaymentResult => {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle')
   const [paymentRequirements, setPaymentRequirements] = useState<PaymentRequirements | null>(null)
   const [currentMediaType, setCurrentMediaType] = useState<'video' | 'image' | null>(null)
+  const [currentMediaId, setCurrentMediaId] = useState<string | null>(null)
   const [resourceInfo, setResourceInfo] = useState<{ description: string; mimeType: string } | null>(null)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [pricing, setPricing] = useState<PlanPricing | null>(null)
@@ -171,6 +171,7 @@ export const useX402Payment = (): UseX402PaymentResult => {
   const disconnectWallet = useCallback(() => {
     setWalletAddress(null)
     setPaymentRequirements(null)
+    setCurrentMediaId(null)
     setMediaUrl(null)
     setTransactionHash(null)
     setPaymentStatus('idle')
@@ -189,6 +190,7 @@ export const useX402Payment = (): UseX402PaymentResult => {
   ): Promise<PaymentRequirements | null> => {
     setPaymentStatus('requesting')
     setError(null)
+    setCurrentMediaId(mediaId)
     setCurrentMediaType(mediaType)
     setCurrentSessionHeader(sessionHeader)
 
@@ -371,8 +373,11 @@ export const useX402Payment = (): UseX402PaymentResult => {
       // Submit to backend
       setPaymentStatus('settling')
 
-      const mediaId = MEDIA_IDS[currentMediaType]
-      const response = await fetch(`${API_URL}/media/${mediaId}/access`, {
+      if (!currentMediaId) {
+        throw new Error('Missing media id for payment execution')
+      }
+
+      const response = await fetch(`${API_URL}/media/${currentMediaId}/access`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -408,13 +413,14 @@ export const useX402Payment = (): UseX402PaymentResult => {
       setPaymentStatus('error')
       return false
     }
-  }, [walletAddress, paymentRequirements, currentMediaType, resourceInfo, pricing, selectedPlan, currentSessionHeader])
+  }, [walletAddress, paymentRequirements, currentMediaType, currentMediaId, resourceInfo, pricing, selectedPlan, currentSessionHeader])
 
   // Reset payment state
   const resetPayment = useCallback(() => {
     setPaymentRequirements(null)
     setResourceInfo(null)
     setCurrentMediaType(null)
+    setCurrentMediaId(null)
     setMediaUrl(null)
     setTransactionHash(null)
     setPaymentStatus('idle')
