@@ -11,17 +11,25 @@ import './App.css'
 
 interface MediaInfo {
   id: string
+  title: string
+  type: 'video' | 'image'
+  mimeType: string
   previewUrl: string
   pricing: {
     '24h': { price: number; priceFormatted: string }
     '7d': { price: number; priceFormatted: string }
   }
   hasAccess?: boolean // Set by backend when X-Wallet-Session header is present
+  entitlement?: {
+    expiresAt: string
+    planType: '24h' | '7d'
+  } | null
 }
 
 function App() {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [_currentMediaType, setCurrentMediaType] = useState<'video' | 'image' | null>(null)
+  const [currentMediaId, setCurrentMediaId] = useState<string | null>(null)
+  const [currentMediaType, setCurrentMediaType] = useState<'video' | 'image' | null>(null)
   const [serverStatus, setServerStatus] = useState<{
     online: boolean | null
     network: string | null
@@ -91,12 +99,12 @@ function App() {
         const response = await fetch(`${API_URL}/media`, { headers })
         if (response.ok) {
           const data = await response.json()
-          if (data.media) {
-            console.log('[App] Media list received:', data.media.map((m: MediaInfo) => ({
-              id: m.id,
-              hasAccess: m.hasAccess
-            })))
+          if (data.media && Array.isArray(data.media)) {
+            console.log('[App] Media list received:', data.media.length, 'items')
             setMediaList(data.media)
+          } else {
+            console.warn('[App] Invalid media list format:', data)
+            setMediaList([])
           }
         } else {
           console.error('[App] Failed to fetch media list:', response.status, response.statusText)
@@ -153,6 +161,17 @@ function App() {
       isMounted = false
     }
   }, [fetchMediaList])
+
+  // Auto-refresh media list every 30 seconds to see new media added by admin
+  useEffect(() => {
+    if (!serverStatus.online) return
+    
+    const interval = setInterval(() => {
+      fetchMediaList()
+    }, 30000) // 30 seconds
+    
+    return () => clearInterval(interval)
+  }, [serverStatus.online, fetchMediaList])
 
   // Refresh entitlements and media list after successful payment
   useEffect(() => {
@@ -268,18 +287,8 @@ function App() {
     fetchMediaList()
   }
 
-  // Check if user has access to media - prioritize hasAccess from API response
-  // If hasAccess is undefined (not yet loaded), fallback to entitlements check
-  const videoMedia = mediaList.find(m => m.id === 'video')
-  const imageMedia = mediaList.find(m => m.id === 'image')
-  const hasVideoAccess = videoMedia?.hasAccess !== undefined 
-    ? videoMedia.hasAccess 
-    : hasAccessTo('video')
-  const hasImageAccess = imageMedia?.hasAccess !== undefined 
-    ? imageMedia.hasAccess 
-    : hasAccessTo('image')
-
-  const handlePaymentRequest = async (mediaType: 'video' | 'image') => {
+  const handlePaymentRequest = async (mediaId: string, mediaType: 'video' | 'image') => {
+    setCurrentMediaId(mediaId)
     setCurrentMediaType(mediaType)
     
     if (!walletAddress) {
@@ -295,7 +304,7 @@ function App() {
       }
     }
 
-    await requestPayment(mediaType, getSessionHeader())
+    await requestPayment(mediaId, mediaType, getSessionHeader())
     setShowPaymentModal(true)
   }
 
@@ -305,6 +314,7 @@ function App() {
 
   const handlePaymentCancel = () => {
     setShowPaymentModal(false)
+    setCurrentMediaId(null)
     setCurrentMediaType(null)
     resetPayment()
   }
@@ -357,43 +367,62 @@ function App() {
       </header>
 
       <main className="demo-container">
-        <div className="media-section">
-          <h2>Video</h2>
-          {hasVideoAccess && (
-            <p className="price-tag">
-              <span className="access-badge">Access Granted</span>
-            </p>
-          )}
-          <SecureVideoPlayer
-            key={`video-${mediaKey}`}
-            assetId="video"
-            isLocked={!hasVideoAccess}
-            hasAccess={hasVideoAccess}
-            onPaymentRequest={() => handlePaymentRequest('video')}
-            serverOnline={serverStatus.online}
-            getSessionHeader={getSessionHeader}
-            previewUrl={mediaList.find(m => m.id === 'video')?.previewUrl}
-          />
-        </div>
-
-        <div className="media-section">
-          <h2>Image</h2>
-          {hasImageAccess && (
-            <p className="price-tag">
-              <span className="access-badge">Access Granted</span>
-            </p>
-          )}
-          <SecureImageViewer
-            key={`image-${mediaKey}`}
-            assetId="image"
-            isLocked={!hasImageAccess}
-            hasAccess={hasImageAccess}
-            onPaymentRequest={() => handlePaymentRequest('image')}
-            serverOnline={serverStatus.online}
-            getSessionHeader={getSessionHeader}
-            previewUrl={mediaList.find(m => m.id === 'image')?.previewUrl}
-          />
-        </div>
+        {mediaList.length === 0 ? (
+          <div className="loading-placeholder">
+            <p>Loading media...</p>
+          </div>
+        ) : (
+          <div className="media-grid">
+            {mediaList.map((media) => {
+              const hasAccess = media.hasAccess ?? false
+              
+              return (
+                <div key={media.id} className="media-section">
+                  <h2>{media.title}</h2>
+                  {hasAccess && (
+                    <p className="price-tag">
+                      <span className="access-badge">Access Granted</span>
+                      {media.entitlement && (
+                        <span className="expires-info">
+                          Expires: {new Date(media.entitlement.expiresAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </p>
+                  )}
+                  {media.type === 'video' ? (
+                    <SecureVideoPlayer
+                      key={`${media.id}-${mediaKey}`}
+                      assetId={media.id}
+                      isLocked={!hasAccess}
+                      hasAccess={hasAccess}
+                      onPaymentRequest={() => handlePaymentRequest(media.id, 'video')}
+                      serverOnline={serverStatus.online}
+                      getSessionHeader={getSessionHeader}
+                      previewUrl={media.previewUrl}
+                    />
+                  ) : (
+                    <SecureImageViewer
+                      key={`${media.id}-${mediaKey}`}
+                      assetId={media.id}
+                      isLocked={!hasAccess}
+                      hasAccess={hasAccess}
+                      onPaymentRequest={() => handlePaymentRequest(media.id, 'image')}
+                      serverOnline={serverStatus.online}
+                      getSessionHeader={getSessionHeader}
+                      previewUrl={media.previewUrl}
+                    />
+                  )}
+                  {!hasAccess && (
+                    <div className="pricing-info">
+                      <span>24h: {media.pricing['24h'].priceFormatted}</span>
+                      <span>7d: {media.pricing['7d'].priceFormatted}</span>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </main>
 
       <PaymentModal

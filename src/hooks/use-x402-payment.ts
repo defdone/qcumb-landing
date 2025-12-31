@@ -36,7 +36,7 @@ export interface UseX402PaymentResult {
   entitlementId: string | null
   connectWallet: () => Promise<void>
   disconnectWallet: () => void
-  requestPayment: (mediaType: 'video' | 'image', sessionHeader?: Record<string, string>) => Promise<PaymentRequirements | null>
+  requestPayment: (mediaId: string, mediaType: 'video' | 'image', sessionHeader?: Record<string, string>) => Promise<PaymentRequirements | null>
   executePayment: (sessionHeader?: Record<string, string>) => Promise<boolean>
   resetPayment: () => void
   setSelectedPlan: (plan: PlanType) => void
@@ -183,6 +183,7 @@ export const useX402Payment = (): UseX402PaymentResult => {
 
   // Request payment (get 402 response from backend)
   const requestPayment = useCallback(async (
+    mediaId: string,
     mediaType: 'video' | 'image',
     sessionHeader: Record<string, string> = {}
   ): Promise<PaymentRequirements | null> => {
@@ -192,7 +193,6 @@ export const useX402Payment = (): UseX402PaymentResult => {
     setCurrentSessionHeader(sessionHeader)
 
     try {
-      const mediaId = MEDIA_IDS[mediaType]
       const response = await fetch(`${API_URL}/media/${mediaId}/access`, {
         method: 'POST',
         headers: { 
