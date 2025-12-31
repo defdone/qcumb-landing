@@ -255,7 +255,7 @@ export const useX402Payment = (): UseX402PaymentResult => {
   const executePayment = useCallback(async (
     sessionHeader: Record<string, string> = {}
   ): Promise<boolean> => {
-    if (!window.ethereum || !walletAddress || !paymentRequirements || !currentMediaType || !resourceInfo) {
+    if (!window.ethereum || !walletAddress || !paymentRequirements || !currentMediaType || !currentMediaId || !resourceInfo) {
       setError('Missing wallet or payment requirements')
       return false
     }
@@ -386,7 +386,7 @@ export const useX402Payment = (): UseX402PaymentResult => {
         body: JSON.stringify({
           planType: selectedPlan,
           message: {
-            parts: [{ kind: 'text', text: `Request access to ${mediaId}` }],
+            parts: [{ kind: 'text', text: `Request access to ${currentMediaId}` }],
             metadata: {
               'x402.payment.payload': signedPayload,
               'x402.payment.status': 'payment-submitted'
