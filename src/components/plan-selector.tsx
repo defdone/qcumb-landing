@@ -75,9 +75,9 @@ export const planSelectorStyles = `
 .plan-option {
   flex: 1;
   padding: 1rem;
-  border: 2px solid var(--border-color, #333);
+  border: 2px solid var(--border-color, #e5e7eb);
   border-radius: 12px;
-  background: var(--bg-secondary, #1a1a1a);
+  background: var(--bg-secondary, #ffffff);
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
@@ -86,12 +86,13 @@ export const planSelectorStyles = `
 
 .plan-option:hover:not(:disabled) {
   border-color: var(--accent-color, #646cff);
-  background: var(--bg-hover, #222);
+  background: var(--bg-hover, #f5f7ff);
 }
 
 .plan-option.selected {
   border-color: var(--accent-color, #646cff);
-  background: var(--accent-bg, rgba(100, 108, 255, 0.1));
+  background: var(--accent-bg, rgba(100, 108, 255, 0.12));
+  box-shadow: 0 6px 20px rgba(100, 108, 255, 0.12);
 }
 
 .plan-option:disabled {
@@ -102,19 +103,19 @@ export const planSelectorStyles = `
 .plan-duration {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-primary, #fff);
+  color: var(--text-primary, #111);
   margin-bottom: 0.25rem;
 }
 
 .plan-price {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--accent-color, #646cff);
+  color: var(--accent-color, #1d4ed8);
 }
 
 .plan-unit {
   font-size: 0.75rem;
-  color: var(--text-secondary, #888);
+  color: var(--text-secondary, #6b7280);
   text-transform: uppercase;
 }
 

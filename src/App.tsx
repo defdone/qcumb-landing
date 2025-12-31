@@ -376,47 +376,50 @@ function App() {
               const hasAccess = media.hasAccess ?? false
               
               return (
-                <div key={media.id} className="media-section">
-                  <h2>{media.title}</h2>
-                  {hasAccess && (
-                    <p className="price-tag">
-                      <span className="access-badge">Access Granted</span>
-                      {media.entitlement && (
-                        <span className="expires-info">
-                          Expires: {new Date(media.entitlement.expiresAt).toLocaleDateString()}
-                        </span>
+                <div key={media.id} className="media-card">
+                  <div className="media-card-header">
+                    <h3 className="media-title">{media.title}</h3>
+                    <div className={`media-status ${hasAccess ? 'status-success' : 'status-locked'}`}>
+                      {hasAccess ? (
+                        <>
+                          <span>Access granted</span>
+                          {media.entitlement?.expiresAt && (
+                            <span className="status-expire">
+                              · Expires {new Date(media.entitlement.expiresAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span>Locked content</span>
                       )}
-                    </p>
-                  )}
-                  {media.type === 'video' ? (
-                    <SecureVideoPlayer
-                      key={`${media.id}-${mediaKey}`}
-                      assetId={media.id}
-                      isLocked={!hasAccess}
-                      hasAccess={hasAccess}
-                      onPaymentRequest={() => handlePaymentRequest(media.id, 'video')}
-                      serverOnline={serverStatus.online}
-                      getSessionHeader={getSessionHeader}
-                      previewUrl={media.previewUrl}
-                    />
-                  ) : (
-                    <SecureImageViewer
-                      key={`${media.id}-${mediaKey}`}
-                      assetId={media.id}
-                      isLocked={!hasAccess}
-                      hasAccess={hasAccess}
-                      onPaymentRequest={() => handlePaymentRequest(media.id, 'image')}
-                      serverOnline={serverStatus.online}
-                      getSessionHeader={getSessionHeader}
-                      previewUrl={media.previewUrl}
-                    />
-                  )}
-                  {!hasAccess && (
-                    <div className="pricing-info">
-                      <span>24h: {media.pricing['24h'].priceFormatted}</span>
-                      <span>7d: {media.pricing['7d'].priceFormatted}</span>
                     </div>
-                  )}
+                  </div>
+
+                  <div className="media-frame">
+                    {media.type === 'video' ? (
+                      <SecureVideoPlayer
+                        key={`${media.id}-${mediaKey}`}
+                        assetId={media.id}
+                        isLocked={!hasAccess}
+                        hasAccess={hasAccess}
+                        onPaymentRequest={() => handlePaymentRequest(media.id, 'video')}
+                        serverOnline={serverStatus.online}
+                        getSessionHeader={getSessionHeader}
+                        previewUrl={media.previewUrl}
+                      />
+                    ) : (
+                      <SecureImageViewer
+                        key={`${media.id}-${mediaKey}`}
+                        assetId={media.id}
+                        isLocked={!hasAccess}
+                        hasAccess={hasAccess}
+                        onPaymentRequest={() => handlePaymentRequest(media.id, 'image')}
+                        serverOnline={serverStatus.online}
+                        getSessionHeader={getSessionHeader}
+                        previewUrl={media.previewUrl}
+                      />
+                    )}
+                  </div>
                 </div>
               )
             })}
@@ -437,6 +440,9 @@ function App() {
         pricing={pricing}
         selectedPlan={selectedPlan}
         onPlanSelect={handlePlanSelect}
+        mediaTitle={currentMediaId ? mediaList.find(m => m.id === currentMediaId)?.title : undefined}
+        mediaPreviewUrl={currentMediaId ? mediaList.find(m => m.id === currentMediaId)?.previewUrl : undefined}
+        mediaType={currentMediaType}
       />
     </div>
   )

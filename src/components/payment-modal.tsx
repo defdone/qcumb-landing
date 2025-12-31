@@ -127,12 +127,14 @@ function PaymentModal({
 
         {/* Plan Selector - show only when not processing */}
         {!isProcessing && !isSuccess && !isError && walletAddress && onPlanSelect && (
-          <PlanSelector
-            pricing={displayPricing}
-            selectedPlan={selectedPlan}
-            onPlanSelect={onPlanSelect}
-            disabled={isProcessing}
-          />
+          <div className="plan-wrapper">
+            <PlanSelector
+              pricing={displayPricing}
+              selectedPlan={selectedPlan}
+              onPlanSelect={onPlanSelect}
+              disabled={isProcessing}
+            />
+          </div>
         )}
 
         {/* Progress Steps */}
