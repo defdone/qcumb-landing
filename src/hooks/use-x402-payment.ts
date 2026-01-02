@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { 
   API_URL, 
   PaymentRequirements,
@@ -84,13 +85,14 @@ export const useX402Payment = (): UseX402PaymentResult => {
   const [currentMediaType, setCurrentMediaType] = useState<'video' | 'image' | null>(null)
   const [currentMediaId, setCurrentMediaId] = useState<string | null>(null)
   const [resourceInfo, setResourceInfo] = useState<{ description: string; mimeType: string } | null>(null)
+  const { address } = useAccount()
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
+  const { connect, connectors } = useConnect()
+  const { disconnect: wagmiDisconnect } = useDisconnect()
   const [pricing, setPricing] = useState<PlanPricing | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('24h')
   const [entitlementId, setEntitlementId] = useState<string | null>(null)
   
-  // Check if user manually disconnected (don't auto-connect in that case)
-  const wasManuallyDisconnected = sessionStorage.getItem('x402_disconnected') === 'true'
   const [mediaUrl, setMediaUrl] = useState<string | null>(null)
   const [transactionHash, setTransactionHash] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -98,77 +100,36 @@ export const useX402Payment = (): UseX402PaymentResult => {
   // Store session header for use in executePayment
   const [currentSessionHeader, setCurrentSessionHeader] = useState<Record<string, string>>({})
 
-  // Auto-connect on mount if user didn't manually disconnect
   useEffect(() => {
-    if (!window.ethereum || wasManuallyDisconnected) return
-
-    window.ethereum.request({ method: 'eth_accounts' })
-      .then((accounts) => {
-        const accountList = accounts as string[]
-        if (accountList.length > 0) {
-          setWalletAddress(accountList[0])
-        }
-      })
-      .catch(() => {
-        // Ignore errors
-      })
-  }, [wasManuallyDisconnected])
-
-  // Listen for account changes
-  useEffect(() => {
-    if (!window.ethereum) return
-
-    const handleAccountsChanged = (accounts: unknown) => {
-      const accountList = accounts as string[]
-      if (accountList.length > 0) {
-        setWalletAddress(accountList[0])
-        // User connected again, clear disconnect flag
-        sessionStorage.removeItem('x402_disconnected')
-      } else if (walletAddress) {
-        // User disconnected from dapp connections
-        setWalletAddress(null)
-      }
+    if (address) {
+      setWalletAddress(address)
+      try { sessionStorage.removeItem('x402_disconnected') } catch {}
+    } else {
+      setWalletAddress(null)
     }
-
-    window.ethereum.on?.('accountsChanged', handleAccountsChanged)
-
-    return () => {
-      window.ethereum?.removeListener?.('accountsChanged', handleAccountsChanged)
-    }
-  }, [walletAddress])
+  }, [address])
 
   // Connect wallet
   const connectWallet = useCallback(async () => {
-    if (!window.ethereum) {
-      setError('No wallet found. Install MetaMask or Coinbase Wallet.')
+    if (!connect || connectors.length === 0) {
+      setError('No wallet connectors available')
       return
     }
-
     try {
       setPaymentStatus('connecting')
       setError(null)
-
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts'
-      }) as string[]
-
-      if (accounts.length === 0) {
-        throw new Error('No account selected')
-      }
-
-      setWalletAddress(accounts[0])
-      // Clear disconnect flag when user manually connects
-      sessionStorage.removeItem('x402_disconnected')
+      await connect({ connector: connectors[0] })
       setPaymentStatus('idle')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Wallet connection error'
       setError(errorMessage)
       setPaymentStatus('error')
     }
-  }, [])
+  }, [connect, connectors])
 
   // Disconnect wallet
   const disconnectWallet = useCallback(() => {
+    try { wagmiDisconnect() } catch {}
     setWalletAddress(null)
     setPaymentRequirements(null)
     setCurrentMediaId(null)
@@ -179,8 +140,8 @@ export const useX402Payment = (): UseX402PaymentResult => {
     setPricing(null)
     setEntitlementId(null)
     // Mark as manually disconnected so we don't auto-connect on refresh
-    sessionStorage.setItem('x402_disconnected', 'true')
-  }, [])
+    try { sessionStorage.setItem('x402_disconnected', 'true') } catch {}
+  }, [wagmiDisconnect])
 
   // Request payment (get 402 response from backend)
   const requestPayment = useCallback(async (
@@ -447,3 +408,7 @@ export const useX402Payment = (): UseX402PaymentResult => {
     setSelectedPlan
   }
 }
+
+
+
+

@@ -10,9 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.16",
+    "@x402/evm": "^2.0.0",
+    "connectkit": "^1.9.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "@x402/evm": "^2.0.0"
+    "viem": "^2.43.4",
+    "wagmi": "^2.19.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
