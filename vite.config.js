@@ -14,25 +14,29 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Simplified code splitting - only split large vendors
+          // Ensure React loads first - critical for wagmi and other React-dependent libraries
           if (id.includes('node_modules')) {
-            // Keep React together
-            if (id.includes('react') || id.includes('react-dom')) {
+            // React and React DOM must be together and load first
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
               return 'react-vendor'
             }
-            // Keep Web3 libraries together
+            // Web3 libraries depend on React - must load after React
             if (id.includes('wagmi') || id.includes('viem') || id.includes('connectkit') || id.includes('@tanstack')) {
               return 'web3-vendor'
             }
-            // Keep router separate
+            // Router depends on React
             if (id.includes('react-router')) {
               return 'router-vendor'
             }
-            // All other vendors in one chunk
+            // All other vendors
             return 'vendor'
           }
         },
       },
+    },
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
     },
   },
 })
