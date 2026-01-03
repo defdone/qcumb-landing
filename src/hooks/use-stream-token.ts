@@ -49,7 +49,6 @@ export const useStreamToken = (
   const fetchStreamToken = useCallback(async (assetId: string): Promise<string | null> => {
     // Prevent concurrent fetches
     if (isFetching.current) {
-      console.log('[StreamAccess] Already fetching, skipping...')
       return null
     }
 
@@ -65,8 +64,6 @@ export const useStreamToken = (
     setError(null)
 
     try {
-      console.log('[StreamAccess] Fetching signed URL for:', assetId)
-      
       // NEW API: /stream/access/:assetId (returns signed URL directly)
       const res = await fetch(`${API_URL}/stream/access/${assetId}`, {
         method: 'POST',
@@ -95,8 +92,6 @@ export const useStreamToken = (
         fetchedAt: Date.now()
       }
 
-      console.log('[StreamAccess] Got signed URL, expires in:', signedUrlData.expiresIn, 'seconds')
-      
       setStreamToken(signedUrlData)
       currentAssetId.current = assetId
 

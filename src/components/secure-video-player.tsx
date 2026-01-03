@@ -65,7 +65,6 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
     }
     
     if (!isTokenValid()) {
-      console.log('[SecureVideo] Token expired, refreshing...')
       await refreshToken()
     }
   }, [isLocked, hasAccess, isTokenValid, refreshToken])
@@ -127,7 +126,6 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
             setHasError(true)
           }}
           onLoadedData={() => {
-            console.log('[SecureVideo] Video loaded successfully')
             setHasError(false)
           }}
           onSeeking={handleSeeking}

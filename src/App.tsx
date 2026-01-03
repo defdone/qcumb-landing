@@ -105,7 +105,6 @@ function App() {
     const doFetch = async () => {
       // Prevent concurrent fetches
       if (isFetchingMediaListRef.current) {
-        console.log('[App] Media list fetch already in progress, skipping...')
         return
       }
 
@@ -113,7 +112,6 @@ function App() {
       // For immediate calls (after auth, payment, etc.), allow refresh even if already fetched
       const hasFetchedKey = 'x402_hasFetchedMediaList'
       if (!immediate && (hasFetchedMediaListRef.current || getSessionFlag(hasFetchedKey))) {
-        console.log('[App] Media list already fetched, skipping duplicate...')
         return
       }
       
@@ -132,16 +130,12 @@ function App() {
         const sessionHeader = getSessionHeader()
         if (sessionHeader['X-Wallet-Session']) {
           headers['X-Wallet-Session'] = sessionHeader['X-Wallet-Session']
-          console.log('[App] Fetching media list WITH session header')
-        } else {
-          console.log('[App] Fetching media list WITHOUT session header')
         }
         
         const response = await fetch(`${API_URL}/media`, { headers })
         if (response.ok) {
           const data = await response.json()
           if (data.media && Array.isArray(data.media)) {
-            console.log('[App] Media list received:', data.media.length, 'items')
             // Only update if data actually changed to prevent unnecessary re-renders
             setMediaList(prevList => {
               const newList = data.media
@@ -169,7 +163,6 @@ function App() {
               
               // Only update if something actually changed
               if (!hasChanges) {
-                console.log('[App] Media list unchanged, skipping update to prevent re-render')
                 return prevList
               }
               
@@ -294,7 +287,6 @@ function App() {
   // Refresh entitlements and media list after successful payment
   useEffect(() => {
     if (paymentStatus === 'success') {
-      console.log('[App] Payment success, refreshing entitlements and media list...')
       fetchEntitlements()
       fetchMediaList(true) // Immediate fetch after payment
       // Force re-render media components to fetch new stream tokens
@@ -331,7 +323,6 @@ function App() {
     // 2. We're currently authenticating
     // 3. We're verifying an existing session (to avoid duplicate sign requests on page refresh)
     if (walletJustConnected || (walletAddress && !isAuthenticated && !isAuthenticating && !isVerifyingSession)) {
-      console.log('[App] Wallet connected, auto-authenticating...', walletAddress, 'walletJustConnected:', walletJustConnected)
       hasAutoAuthenticatedRef.current = true
       setSessionFlag(authKey, true)
       previousWalletAddress.current = walletAddress
@@ -341,13 +332,11 @@ function App() {
         .then((success) => {
           if (cancelled) return
           if (success) {
-            console.log('[App] Auto-authentication successful, refreshing media list...')
             // Refresh media list after authentication (debounced)
             if (!cancelled) {
               fetchMediaList()
             }
           } else {
-            console.log('[App] Auto-authentication failed')
           }
         })
         .catch((err) => {
@@ -382,10 +371,6 @@ function App() {
     // Fetch immediately - preview doesn't need session, only hasAccess does
     // This allows preview to show instantly while session verification happens in background
     if (serverStatus.online && !hasFetchedAfterMountRef.current) {
-      console.log('[App] Fetching media list immediately (preview doesn\'t need session)...', {
-        serverStatus: serverStatus.online,
-        isVerifyingSession
-      })
       hasFetchedAfterMountRef.current = true
       // Immediate fetch for first load (no debounce) - faster loading
       // This will fetch WITHOUT session header first, then refresh WITH header after verification
@@ -403,7 +388,6 @@ function App() {
     const verificationJustCompleted = previousIsVerifyingRef.current === true && isVerifyingSession === false
     
     if (verificationJustCompleted && hasFetchedAfterMountRef.current && serverStatus.online && isAuthenticated) {
-      console.log('[App] Session verification completed, refreshing media list WITH session header to update hasAccess...')
       // Refresh with session header to get updated hasAccess status
       fetchMediaList(true)
     }
@@ -430,11 +414,6 @@ function App() {
     // Only fetch if authentication state actually changed
     if (previousIsAuthenticatedRef.current !== isAuthenticated) {
       previousIsAuthenticatedRef.current = isAuthenticated
-      if (isAuthenticated) {
-        console.log('[App] Session authenticated (after mount), refreshing media list with session header...')
-      } else {
-        console.log('[App] Session disconnected (after mount), refreshing media list without header')
-      }
       // Immediate fetch to get updated hasAccess status after authentication
       // This is important - we need to refresh to get access status with session header
       fetchMediaList(true)

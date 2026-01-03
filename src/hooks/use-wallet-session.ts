@@ -91,7 +91,6 @@ export const useWalletSession = (): UseWalletSessionResult => {
 
     try {
       // Step 1: Request nonce
-      console.log('[Auth] Requesting nonce for', walletAddress)
       const nonceRes = await fetch(`${API_URL}/wallet/nonce`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -107,19 +106,14 @@ export const useWalletSession = (): UseWalletSessionResult => {
       }
 
       const { message, nonce } = await nonceRes.json()
-      console.log('[Auth] Got nonce:', nonce)
 
       // Step 2: Sign message with wallet
-      console.log('[Auth] Requesting signature...')
       const signature = await window.ethereum.request({
         method: 'personal_sign',
         params: [message, walletAddress]
       }) as string
 
-      console.log('[Auth] Got signature:', signature.slice(0, 20) + '...')
-
       // Step 3: Verify signature and get session
-      console.log('[Auth] Verifying signature...')
       const verifyRes = await fetch(`${API_URL}/wallet/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -132,7 +126,6 @@ export const useWalletSession = (): UseWalletSessionResult => {
       }
 
       const { sessionToken, expiresAt } = await verifyRes.json()
-      console.log('[Auth] Session created, expires:', expiresAt)
 
       // Save session
       const newSession: WalletSession = {
@@ -256,14 +249,8 @@ export const useWalletSession = (): UseWalletSessionResult => {
   // Verify session on mount - runs ONCE
   useEffect(() => {
     const currentSession = loadSession() // Read from localStorage directly
-    console.log('[Session] Checking for existing session on mount...', currentSession ? 'Found session' : 'No session found')
     if (currentSession) {
       setIsVerifyingSession(true)
-      console.log('[Session] Verifying existing session from localStorage...', {
-        walletAddress: currentSession.walletAddress,
-        expiresAt: currentSession.expiresAt,
-        tokenPreview: currentSession.sessionToken.substring(0, 20) + '...'
-      })
       // Verify session is still valid on server
       fetch(`${API_URL}/wallet/session`, {
         headers: { 'X-Wallet-Session': currentSession.sessionToken }
@@ -271,7 +258,6 @@ export const useWalletSession = (): UseWalletSessionResult => {
         .then(res => {
           if (!res.ok) {
             // Server rejected session (401, 403, etc.) - clear it
-            console.log('[Session] Server rejected session, clearing...')
             setSession(null)
             saveSession(null)
             setEntitlements([])
@@ -285,7 +271,6 @@ export const useWalletSession = (): UseWalletSessionResult => {
           
           if (data.authenticated) {
             // Session valid, update session with any new expiry date from server
-            console.log('[Session] Session valid, fetching entitlements...')
             const updatedSession: WalletSession = {
               ...currentSession,
               // Update expiresAt if server provided a new one
@@ -296,7 +281,6 @@ export const useWalletSession = (): UseWalletSessionResult => {
             fetchEntitlementsInternal(currentSession.sessionToken)
           } else {
             // Session invalid according to server
-            console.log('[Session] Session invalid, clearing...')
             setSession(null)
             saveSession(null)
             setEntitlements([])
@@ -317,7 +301,6 @@ export const useWalletSession = (): UseWalletSessionResult => {
   // Clear session if wallet address changes externally
   const clearSessionForWallet = useCallback((newWalletAddress: string | null) => {
     if (session && newWalletAddress?.toLowerCase() !== session.walletAddress.toLowerCase()) {
-      console.log('[Session] Wallet changed, clearing session')
       setSession(null)
       saveSession(null)
       setEntitlements([])

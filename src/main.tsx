@@ -14,9 +14,10 @@ window.addEventListener('error', (event) => {
   const errorMessage = event.message || ''
   const errorSource = event.filename || ''
   
-  // Check if it's a network error from external libraries
+  // Check if it's a network error from external libraries or blocked by ad blocker
   const isNetworkError = 
     errorMessage.includes('ERR_INTERNET_DISCONNECTED') ||
+    errorMessage.includes('ERR_BLOCKED_BY_CLIENT') ||
     errorMessage.includes('Failed to fetch') ||
     errorMessage.includes('NetworkError') ||
     errorMessage.includes('WebSocket connection') ||
@@ -24,7 +25,11 @@ window.addEventListener('error', (event) => {
     errorSource.includes('connectkit') ||
     errorSource.includes('wagmi') ||
     errorSource.includes('coinbase') ||
-    errorSource.includes('walletlink')
+    errorSource.includes('walletlink') ||
+    errorSource.includes('googleapis') ||
+    errorSource.includes('google.com') ||
+    errorSource.includes('cloudflareinsights') ||
+    errorSource.includes('cloudflare.com')
   
   if (isNetworkError) {
     // Suppress these errors - they're expected when offline
@@ -41,9 +46,10 @@ window.addEventListener('unhandledrejection', (event) => {
   const errorMessage = reason?.message || String(reason) || ''
   const errorStack = reason?.stack || ''
   
-  // Check if it's a network error from external libraries
+  // Check if it's a network error from external libraries or blocked by ad blocker
   const isNetworkError = 
     errorMessage.includes('ERR_INTERNET_DISCONNECTED') ||
+    errorMessage.includes('ERR_BLOCKED_BY_CLIENT') ||
     errorMessage.includes('Failed to fetch') ||
     errorMessage.includes('NetworkError') ||
     errorMessage.includes('WebSocket') ||
@@ -53,7 +59,11 @@ window.addEventListener('unhandledrejection', (event) => {
     errorStack.includes('connectkit') ||
     errorStack.includes('wagmi') ||
     errorStack.includes('coinbase') ||
-    errorStack.includes('walletlink')
+    errorStack.includes('walletlink') ||
+    errorStack.includes('googleapis') ||
+    errorStack.includes('google.com') ||
+    errorStack.includes('cloudflareinsights') ||
+    errorStack.includes('cloudflare.com')
   
   if (isNetworkError) {
     // Suppress these errors - they're expected when offline
