@@ -2,9 +2,39 @@
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    <!-- Favicons for different sizes and platforms -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>x402 Payment Demo</title>
+    <title>Defdone • web3</title>
+    <meta name="description" content="Defdone is a web3 platform for creating and managing digital assets.">
+    <meta name="keywords" content="web3, defdone, digital assets, content, payments, authentication">
+    <meta name="author" content="Defdone">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    <meta name="google" content="notranslate">
+    <meta name="google-site-verification" content="google-site-verification=google-site-verification">
+    <style>
+      /* Critical CSS to prevent white flash - applied immediately before React loads */
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #0a0a0a;
+        color: #ffffff;
+        overflow: hidden;
+      }
+      #root {
+        margin: 0;
+        padding: 0;
+        max-width: 100%;
+        background: transparent;
+        min-height: 100vh;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

@@ -45,7 +45,7 @@ const loadSession = (): WalletSession | null => {
       const session = JSON.parse(saved) as WalletSession
       // Return session even if expired locally - server will verify
       // This allows server to potentially extend session validity
-      return session
+        return session
     }
   } catch {
     localStorage.removeItem(STORAGE_KEY)
@@ -99,7 +99,10 @@ export const useWalletSession = (): UseWalletSessionResult => {
       })
 
       if (!nonceRes.ok) {
-        const data = await nonceRes.json()
+        if (nonceRes.status === 429) {
+          throw new Error('Too many requests. Please wait a moment and try again.')
+        }
+        const data = await nonceRes.json().catch(() => ({}))
         throw new Error(data.error || 'Failed to get nonce')
       }
 

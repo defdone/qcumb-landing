@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import SecureVideoPlayer from './components/secure-video-player'
 import SecureImageViewer from './components/secure-image-viewer'
 import PaymentModal from './components/payment-modal'
 import WalletConnect from './components/wallet-connect'
+import SkeletonLoader from './components/skeleton-loader'
+import SuccessAnimation from './components/success-animation'
 import { planSelectorStyles } from './components/plan-selector'
 import { useX402Payment, PlanType } from './hooks/use-x402-payment'
 import { useWalletSession } from './hooks/use-wallet-session'
@@ -27,18 +30,40 @@ interface MediaInfo {
 }
 
 function App() {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [currentMediaId, setCurrentMediaId] = useState<string | null>(null)
-  const [currentMediaType, setCurrentMediaType] = useState<'video' | 'image' | null>(null)
   const [serverStatus, setServerStatus] = useState<{
     online: boolean | null
     network: string | null
-  }>({ online: null, network: null })
+  }>({ online: true, network: null }) // Start with online: true to allow immediate fetching
   const [mediaKey, setMediaKey] = useState(0) // Key to force re-render media components
   const [mediaList, setMediaList] = useState<MediaInfo[]>([]) // Media list from API
+  const [isLoadingMedia, setIsLoadingMedia] = useState(true) // Loading state for media list
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false) // Success animation state
   const previousWalletAddress = useRef<string | null>(null) // Track wallet address changes
   const fetchMediaListTimeoutRef = useRef<NodeJS.Timeout | null>(null) // Debounce fetchMediaList
   const isFetchingMediaListRef = useRef<boolean>(false) // Prevent concurrent fetches
+  const hasAutoAuthenticatedRef = useRef<boolean>(false) // Prevent multiple auto-authenticate calls
+  const hasCheckedServerRef = useRef<boolean>(false) // Prevent multiple server checks
+  const hasFetchedMediaListRef = useRef<boolean>(false) // Prevent multiple media list fetches on mount
+  const previousIsAuthenticatedRef = useRef<boolean | null>(null) // Track authentication state changes
+  
+  // Use sessionStorage to persist flags across hot reloads
+  const getSessionFlag = (key: string): boolean => {
+    try {
+      return sessionStorage.getItem(key) === 'true'
+    } catch {
+      return false
+    }
+  }
+  const setSessionFlag = (key: string, value: boolean) => {
+    try {
+      sessionStorage.setItem(key, value ? 'true' : 'false')
+    } catch {
+      // Ignore errors
+    }
+  }
 
   // Wallet session hook for authentication
   const {
@@ -84,7 +109,24 @@ function App() {
         return
       }
 
+      // Prevent multiple fetches on mount/hot reload (only for debounced calls, not immediate)
+      // For immediate calls (after auth, payment, etc.), allow refresh even if already fetched
+      const hasFetchedKey = 'x402_hasFetchedMediaList'
+      if (!immediate && (hasFetchedMediaListRef.current || getSessionFlag(hasFetchedKey))) {
+        console.log('[App] Media list already fetched, skipping duplicate...')
+        return
+      }
+      
+      // For immediate calls, allow refresh if data might have changed (e.g., after payment, auth)
+      // This ensures we get updated hasAccess status after authentication
+
       isFetchingMediaListRef.current = true
+      // Only show loading state on initial load, not on background refresh
+      // This prevents flickering when auto-refreshing
+      const isInitialLoad = !hasFetchedMediaListRef.current && !getSessionFlag(hasFetchedKey)
+      if (isInitialLoad) {
+        setIsLoadingMedia(true)
+      }
       try {
         const headers: Record<string, string> = {}
         const sessionHeader = getSessionHeader()
@@ -100,7 +142,39 @@ function App() {
           const data = await response.json()
           if (data.media && Array.isArray(data.media)) {
             console.log('[App] Media list received:', data.media.length, 'items')
-            setMediaList(data.media)
+            // Only update if data actually changed to prevent unnecessary re-renders
+            setMediaList(prevList => {
+              const newList = data.media
+              
+              // Deep comparison to prevent re-renders if nothing changed
+              if (prevList.length !== newList.length) {
+                return newList
+              }
+              
+              // Check if any item changed (compare all relevant fields)
+              const hasChanges = prevList.some((prev, idx) => {
+                const next = newList[idx]
+                if (!next) return true
+                
+                // Compare all fields that matter
+                return prev.id !== next.id || 
+                  prev.title !== next.title ||
+                  prev.type !== next.type ||
+                  prev.mimeType !== next.mimeType ||
+                  prev.previewUrl !== next.previewUrl ||
+                  prev.hasAccess !== next.hasAccess ||
+                  prev.entitlement?.expiresAt !== next.entitlement?.expiresAt ||
+                  prev.entitlement?.planType !== next.entitlement?.planType
+              })
+              
+              // Only update if something actually changed
+              if (!hasChanges) {
+                console.log('[App] Media list unchanged, skipping update to prevent re-render')
+                return prevList
+              }
+              
+              return newList
+            })
           } else {
             console.warn('[App] Invalid media list format:', data)
             setMediaList([])
@@ -109,9 +183,23 @@ function App() {
           console.error('[App] Failed to fetch media list:', response.status, response.statusText)
         }
       } catch (err) {
-        console.error('[App] Failed to fetch media list:', err)
+        // Only log network errors in development, suppress in production
+        if (import.meta.env.DEV) {
+          console.error('[App] Failed to fetch media list:', err)
+        }
+        // Don't show error to user - network errors are expected when offline
       } finally {
         isFetchingMediaListRef.current = false
+        // Only clear loading state if we set it (initial load)
+        if (isInitialLoad) {
+          setIsLoadingMedia(false)
+        }
+        // Mark as fetched only for initial load (not for immediate refreshes after auth/payment)
+        // This allows refreshing list after authentication to get updated hasAccess status
+        if (!immediate && isInitialLoad) {
+          hasFetchedMediaListRef.current = true
+          setSessionFlag('x402_hasFetchedMediaList', true)
+        }
       }
     }
 
@@ -126,8 +214,27 @@ function App() {
     }
   }, [getSessionHeader])
 
-  // Check server status - runs ONCE on mount, no polling
+  // Add dashboard mode class when on /app route
   useEffect(() => {
+    if (location.pathname === '/app') {
+      document.body.classList.add('dashboard-mode')
+    } else {
+      document.body.classList.remove('dashboard-mode')
+    }
+    return () => {
+      document.body.classList.remove('dashboard-mode')
+    }
+  }, [location.pathname])
+
+  // Check server status - runs ONCE on mount, no polling
+  // Protected against React.StrictMode and hot reload
+  useEffect(() => {
+    // Prevent multiple checks (React.StrictMode runs effects twice in dev, hot reload can trigger multiple times)
+    if (hasCheckedServerRef.current) {
+      return
+    }
+    hasCheckedServerRef.current = true
+
     let isMounted = true
 
     const checkServer = async () => {
@@ -142,14 +249,14 @@ function App() {
           const data = await response.json()
           const network = data?.payment?.network || data?.network || null
           setServerStatus({ online: true, network })
-          // Don't fetch media list here - wait for session verification to complete
-          // This prevents duplicate fetches on page load
         } else {
-          setServerStatus({ online: false, network: null })
+          // Even if error (including 429), assume server is online
+          setServerStatus({ online: true, network: null })
         }
       } catch {
+        // Even on error, assume server is online (don't show offline)
         if (!isMounted) return
-        setServerStatus({ online: false, network: null })
+        setServerStatus({ online: true, network: null })
       }
     }
 
@@ -159,18 +266,30 @@ function App() {
     return () => {
       isMounted = false
     }
-  }, [fetchMediaList])
+  }, []) // Empty dependency array - run only once on mount
 
-  // Auto-refresh media list every 30 seconds to see new media added by admin
+  // Auto-refresh media list - only when page becomes visible (not on interval)
+  // This prevents constant refreshing and flickering
   useEffect(() => {
-    if (!serverStatus.online) return
+    // Don't start if server is explicitly offline
+    if (serverStatus.online === false) return
     
-    const interval = setInterval(() => {
-      fetchMediaList()
-    }, 30000) // 30 seconds
+    // Only refresh when page becomes visible (user returns to tab)
+    // This is how production apps handle background updates - no constant polling
+    const handleVisibilityChange = () => {
+      if (!document.hidden && hasFetchedAfterMountRef.current) {
+        // Silent background refresh - no loading state, smart comparison prevents re-render
+        fetchMediaList(true)
+      }
+    }
     
-    return () => clearInterval(interval)
-  }, [serverStatus.online, fetchMediaList])
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverStatus.online]) // fetchMediaList is stable (useCallback)
 
   // Refresh entitlements and media list after successful payment
   useEffect(() => {
@@ -188,15 +307,34 @@ function App() {
   // BUT: Don't authenticate if we're verifying an existing session (to avoid duplicate sign requests)
   useEffect(() => {
     const walletChanged = previousWalletAddress.current !== walletAddress
+    const authKey = `x402_hasAutoAuthenticated_${walletAddress || 'none'}`
+    
+    // Reset flag when wallet changes
+    if (walletChanged) {
+      hasAutoAuthenticatedRef.current = false
+      if (previousWalletAddress.current) {
+        setSessionFlag(`x402_hasAutoAuthenticated_${previousWalletAddress.current}`, false)
+      }
+    }
+    
+    // Prevent infinite loop - only authenticate once per wallet address
+    // Check both ref and sessionStorage (for hot reload protection)
+    if (hasAutoAuthenticatedRef.current || getSessionFlag(authKey)) {
+      previousWalletAddress.current = walletAddress
+      return
+    }
+    
     const walletJustConnected = walletChanged && walletAddress !== null && previousWalletAddress.current === null
     
     // Don't auto-authenticate if:
     // 1. We're already authenticated
     // 2. We're currently authenticating
     // 3. We're verifying an existing session (to avoid duplicate sign requests on page refresh)
-    // 4. Server is offline
-    if (walletJustConnected || (walletAddress && !isAuthenticated && !isAuthenticating && !isVerifyingSession && serverStatus.online)) {
+    if (walletJustConnected || (walletAddress && !isAuthenticated && !isAuthenticating && !isVerifyingSession)) {
       console.log('[App] Wallet connected, auto-authenticating...', walletAddress, 'walletJustConnected:', walletJustConnected)
+      hasAutoAuthenticatedRef.current = true
+      setSessionFlag(authKey, true)
+      previousWalletAddress.current = walletAddress
       let cancelled = false
       
       authenticate(walletAddress!)
@@ -218,59 +356,91 @@ function App() {
           }
         })
       
-      previousWalletAddress.current = walletAddress
-      
       return () => {
         cancelled = true
       }
-    } else if (walletChanged) {
-      // Update ref even if we don't authenticate (e.g., wallet disconnected)
+    } else {
       previousWalletAddress.current = walletAddress
     }
-  }, [walletAddress, isAuthenticated, isAuthenticating, isVerifyingSession, authenticate, serverStatus.online, fetchMediaList])
+  }, [walletAddress, isAuthenticated, isAuthenticating, isVerifyingSession])
 
   // Track if we've done initial fetch after mount/verification
   const hasFetchedAfterMountRef = useRef(false)
   const previousIsVerifyingRef = useRef<boolean | undefined>(undefined)
   
-  // Refresh media list when session verification completes (on page refresh)
-  // This is the PRIMARY place to fetch after page load
+  // Fetch media list IMMEDIATELY on mount (preview doesn't need session)
+  // Preview should always display, only hasAccess depends on session
   useEffect(() => {
-    // Detect when verification just completed (transition from true to false)
-    const verificationJustCompleted = previousIsVerifyingRef.current === true && isVerifyingSession === false
+    // Prevent multiple fetches on hot reload (check sessionStorage, not ref)
+    const hasFetchedKey = 'x402_hasFetchedMediaList'
+    if (getSessionFlag(hasFetchedKey)) {
+      hasFetchedMediaListRef.current = true
+      hasFetchedAfterMountRef.current = true
+      return
+    }
     
-    if (serverStatus.online && !isVerifyingSession) {
-      if (!hasFetchedAfterMountRef.current || verificationJustCompleted) {
-        console.log('[App] Fetching media list after verification completes...', {
-          hasFetchedAfterMount: hasFetchedAfterMountRef.current,
-          verificationJustCompleted
-        })
-        hasFetchedAfterMountRef.current = true
-        // Debounced fetch - will combine multiple rapid changes
-        fetchMediaList()
-      }
+    // Fetch immediately - preview doesn't need session, only hasAccess does
+    // This allows preview to show instantly while session verification happens in background
+    if (serverStatus.online && !hasFetchedAfterMountRef.current) {
+      console.log('[App] Fetching media list immediately (preview doesn\'t need session)...', {
+        serverStatus: serverStatus.online,
+        isVerifyingSession
+      })
+      hasFetchedAfterMountRef.current = true
+      // Immediate fetch for first load (no debounce) - faster loading
+      // This will fetch WITHOUT session header first, then refresh WITH header after verification
+      fetchMediaList(true)
     }
     
     previousIsVerifyingRef.current = isVerifyingSession
-  }, [isVerifyingSession, serverStatus.online, fetchMediaList])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverStatus.online]) // Only depend on serverStatus, not isVerifyingSession
+  
+  // After session verification completes, refresh media list WITH session header
+  // This updates hasAccess status for each media item
+  useEffect(() => {
+    // Only refresh if we already fetched initial list and verification just completed
+    const verificationJustCompleted = previousIsVerifyingRef.current === true && isVerifyingSession === false
+    
+    if (verificationJustCompleted && hasFetchedAfterMountRef.current && serverStatus.online && isAuthenticated) {
+      console.log('[App] Session verification completed, refreshing media list WITH session header to update hasAccess...')
+      // Refresh with session header to get updated hasAccess status
+      fetchMediaList(true)
+    }
+    
+    previousIsVerifyingRef.current = isVerifyingSession
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVerifyingSession, isAuthenticated, serverStatus.online]) // fetchMediaList is stable (useCallback)
 
   // Refresh media list when session state changes AFTER initial mount
   // (e.g., user connects/disconnects wallet, not on page refresh)
   useEffect(() => {
     // Skip initial mount - only react to changes after mount
-    if (!serverStatus.online || isVerifyingSession || !hasFetchedAfterMountRef.current) {
+    // Don't wait for serverStatus.online to be true - assume online if not explicitly false
+    if (serverStatus.online === false || isVerifyingSession || !hasFetchedAfterMountRef.current) {
       return
     }
 
-    // Only fetch if session state changed AFTER initial mount
-    if (isAuthenticated) {
-      console.log('[App] Session authenticated (after mount), refreshing media list...')
-    } else {
-      console.log('[App] Session disconnected (after mount), refreshing media list without header')
+    // Skip if this is the first time (initial mount after verification)
+    if (previousIsAuthenticatedRef.current === null) {
+      previousIsAuthenticatedRef.current = isAuthenticated
+      return
     }
-    // Debounced fetch - will combine multiple rapid changes
-    fetchMediaList()
-  }, [isAuthenticated, isVerifyingSession, fetchMediaList, serverStatus.online])
+
+    // Only fetch if authentication state actually changed
+    if (previousIsAuthenticatedRef.current !== isAuthenticated) {
+      previousIsAuthenticatedRef.current = isAuthenticated
+      if (isAuthenticated) {
+        console.log('[App] Session authenticated (after mount), refreshing media list with session header...')
+      } else {
+        console.log('[App] Session disconnected (after mount), refreshing media list without header')
+      }
+      // Immediate fetch to get updated hasAccess status after authentication
+      // This is important - we need to refresh to get access status with session header
+      fetchMediaList(true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isVerifyingSession, serverStatus.online]) // fetchMediaList is stable (useCallback)
 
   // Handle wallet connect - authentication will happen automatically via useEffect
   const handleConnect = async () => {
@@ -282,14 +452,21 @@ function App() {
   const handleDisconnect = () => {
     sessionLogout()
     disconnectWallet()
-    // Refresh media list without session header (debounced)
-    fetchMediaList()
+    // Return to landing page
+    navigate('/', { replace: true })
   }
 
+  // Cleanup debounced media fetch on unmount (e.g., route change)
+  useEffect(() => {
+    return () => {
+      if (fetchMediaListTimeoutRef.current) {
+        clearTimeout(fetchMediaListTimeoutRef.current)
+        fetchMediaListTimeoutRef.current = null
+      }
+    }
+  }, [])
+
   const handlePaymentRequest = async (mediaId: string, mediaType: 'video' | 'image') => {
-    setCurrentMediaId(mediaId)
-    setCurrentMediaType(mediaType)
-    
     if (!walletAddress) {
       await handleConnect()
       return
@@ -308,13 +485,19 @@ function App() {
   }
 
   const handlePaymentExecute = async () => {
-    await executePayment(getSessionHeader())
+    const success = await executePayment(getSessionHeader())
+    if (success) {
+      setShowSuccessAnimation(true)
+      // Refresh media list after successful payment
+      setTimeout(() => {
+        fetchMediaList(true)
+        setMediaKey(prev => prev + 1) // Force re-render media components
+      }, 500)
+    }
   }
 
   const handlePaymentCancel = () => {
     setShowPaymentModal(false)
-    setCurrentMediaId(null)
-    setCurrentMediaType(null)
     resetPayment()
   }
 
@@ -323,52 +506,73 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className="app app-dashboard">
       {/* Inject plan selector styles */}
       <style>{planSelectorStyles}</style>
       
-      <header className="app-header">
-        <div className="header-top">
-          <h1>x402 Payment Demo</h1>
-          <WalletConnect
-            walletAddress={walletAddress}
-            onConnect={handleConnect}
-            onDisconnect={handleDisconnect}
-            isConnecting={paymentStatus === 'connecting' || isAuthenticating}
-          />
-        </div>
-        <p className="description">
-          Demo x402 protocol with USDC payments on Base Sepolia.
-          {isAuthenticated ? (
-            <> Authenticated</>
-          ) : (
-            <> Connect wallet to unlock premium content.</>
-          )}
-        </p>
-        <div className="status-badges">
-          <div className="status-badge">
-            <span className={`status-dot ${serverStatus.online === null ? 'checking' : serverStatus.online ? 'online' : 'offline'}`}></span>
-            {serverStatus.online === null ? 'Connecting...' : serverStatus.online ? (
-              serverStatus.network?.includes('84532') || serverStatus.network?.includes('sepolia') 
-                ? 'Base Sepolia' 
-                : serverStatus.network?.includes('8453') || serverStatus.network === 'base'
-                  ? 'Base Mainnet'
-                  : serverStatus.network || 'Connected'
-            ) : 'Server Offline'}
+      <nav className="dashboard-nav">
+        <div className="dashboard-nav-inner">
+          <div className="dashboard-logo-wrapper">
+            <div className="dashboard-logo">defdone</div>
+            <span className="dashboard-logo-badge">web3</span>
           </div>
-          {isAuthenticated && (
-            <div className="status-badge authenticated">
-              <span className="status-dot online"></span>
-              Session Active
+          <div className="dashboard-nav-right">
+            <div className="dashboard-status">
+              <div className="dashboard-status-item">
+                <span className={`status-dot ${serverStatus.online === null ? 'checking' : serverStatus.online ? 'online' : 'offline'}`}></span>
+                <span className="status-text">
+                  {serverStatus.online === null ? 'Connecting...' : serverStatus.online ? (
+                    serverStatus.network?.includes('84532') || serverStatus.network?.includes('sepolia') 
+                      ? 'Base Sepolia' 
+                      : serverStatus.network?.includes('8453') || serverStatus.network === 'base'
+                        ? 'Base Mainnet'
+                        : serverStatus.network || 'Connected'
+                  ) : 'Server Offline'}
+                </span>
+              </div>
+              {isAuthenticated && (
+                <div className="dashboard-status-item authenticated">
+                  <span className="status-dot online"></span>
+                  <span className="status-text">Session Active</span>
+                </div>
+              )}
             </div>
-          )}
+            <WalletConnect
+              walletAddress={walletAddress}
+              onConnect={handleConnect}
+              onDisconnect={handleDisconnect}
+              isConnecting={paymentStatus === 'connecting' || isAuthenticating}
+            />
+          </div>
         </div>
-      </header>
+      </nav>
+
+      <div className="dashboard-content">
+        <div className="dashboard-header">
+          <h1 className="dashboard-title">Media Library</h1>
+          <p className="dashboard-subtitle">
+            {isAuthenticated 
+              ? 'Browse and access premium content' 
+              : 'Connect your wallet to unlock premium content'}
+          </p>
+        </div>
 
       <main className="demo-container">
-        {mediaList.length === 0 ? (
-          <div className="loading-placeholder">
-            <p>Loading media...</p>
+        {isLoadingMedia ? (
+          <div className="media-grid">
+            <SkeletonLoader count={3} />
+          </div>
+        ) : mediaList.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+            <h3 className="empty-state-title">No media available</h3>
+            <p className="empty-state-description">Media content will appear here once available.</p>
           </div>
         ) : (
           <div className="media-grid">
@@ -425,7 +629,8 @@ function App() {
             })}
           </div>
         )}
-      </main>
+        </main>
+      </div>
 
       <PaymentModal
         show={showPaymentModal}
@@ -440,9 +645,11 @@ function App() {
         pricing={pricing}
         selectedPlan={selectedPlan}
         onPlanSelect={handlePlanSelect}
-        mediaTitle={currentMediaId ? mediaList.find(m => m.id === currentMediaId)?.title : undefined}
-        mediaPreviewUrl={currentMediaId ? mediaList.find(m => m.id === currentMediaId)?.previewUrl : undefined}
-        mediaType={currentMediaType}
+      />
+
+      <SuccessAnimation 
+        show={showSuccessAnimation} 
+        onComplete={() => setShowSuccessAnimation(false)}
       />
     </div>
   )

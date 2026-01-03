@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, memo } from 'react'
 import { useStreamToken } from '../hooks/use-stream-token'
 
 interface SecureImageViewerProps {
@@ -119,4 +119,5 @@ const SecureImageViewer: React.FC<SecureImageViewerProps> = ({
   )
 }
 
-export default SecureImageViewer
+// Memoize component to prevent re-renders when parent re-renders but props haven't changed
+export default memo(SecureImageViewer)

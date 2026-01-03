@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, memo } from 'react'
 import { useStreamToken } from '../hooks/use-stream-token'
 
 interface SecureVideoPlayerProps {
@@ -57,13 +57,18 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
     }
   }, [hasAccess, isLocked, assetId]) // Removed streamUrl, fetchStreamToken, clearToken to prevent loops
 
-  // Handle seeking - refresh token if needed
+  // Handle seeking - refresh token if needed (ONLY for unlocked content)
   const handleSeeking = useCallback(async () => {
+    // Don't refresh token for locked content - it uses previewUrl, not stream token
+    if (isLocked || !hasAccess) {
+      return
+    }
+    
     if (!isTokenValid()) {
       console.log('[SecureVideo] Token expired, refreshing...')
       await refreshToken()
     }
-  }, [isTokenValid, refreshToken])
+  }, [isLocked, hasAccess, isTokenValid, refreshToken])
 
   const handleClick = useCallback((): void => {
     if (isLocked && serverOnline) {
@@ -162,5 +167,6 @@ const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
   )
 }
 
-export default SecureVideoPlayer
+// Memoize component to prevent re-renders when parent re-renders but props haven't changed
+export default memo(SecureVideoPlayer)
 

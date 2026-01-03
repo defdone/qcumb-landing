@@ -15,8 +15,7 @@
   
   font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.6;
-  color: var(--text);
-  background: var(--bg);
+  /* Don't set background on :root - let body handle it to prevent white flash */
 }
 
 * {
@@ -28,15 +27,45 @@ html, body {
   padding: 0;
   height: 100%;
   overflow: hidden;
+  /* Dark background by default (for landing page) - prevents white flash */
+  background: #0a0a0a;
+  color: #ffffff;
 }
 
+/* Default: landing page style (full width, no padding) - prevents white flash */
 #root {
-  height: 100%;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 24px;
+  height: auto;
+  min-height: 100vh;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
+  /* Ensure dark background - no white flash */
+  background: transparent;
+}
+
+/* Landing page uses full width */
+body.landing-mode {
+  overflow: auto;
+}
+
+body.landing-mode #root {
+  /* Already set as default above */
+}
+
+/* Dashboard uses full width */
+body.dashboard-mode {
+  overflow: hidden;
+  /* Dashboard can have different background if needed */
+  background: #0a0a0a;
+}
+
+body.dashboard-mode #root {
+  max-width: 100%;
+  padding: 0;
+  height: 100vh;
+  min-height: 100vh;
 }
 
 ::selection {
@@ -55,4 +84,37 @@ a:hover {
 
 code, .mono {
   font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Smooth Animations */
+* {
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+/* Touch-friendly on mobile */
+@media (max-width: 768px) {
+  button,
+  a[role="button"],
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Premium Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
