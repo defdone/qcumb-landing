@@ -491,9 +491,21 @@ function App() {
       
       <nav className="dashboard-nav">
         <div className="dashboard-nav-inner">
-          <div className="dashboard-logo-wrapper">
-            <div className="dashboard-logo">defdone</div>
-            <span className="dashboard-logo-badge">web3</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+            <button
+              onClick={() => navigate('/')}
+              className="dashboard-back-btn"
+              aria-label="Back to home"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Home</span>
+            </button>
+            <div className="dashboard-logo-wrapper">
+              <div className="dashboard-logo">defdone</div>
+              <span className="dashboard-logo-badge">web3</span>
+            </div>
           </div>
           <div className="dashboard-nav-right">
             <div className="dashboard-status">

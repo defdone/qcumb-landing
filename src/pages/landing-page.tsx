@@ -715,6 +715,81 @@ export default function LandingPage() {
           </div>
         </section>
 
+        <section className="landing-section landing-section-demo" id="demo">
+          <div className="landing-section-inner">
+            <div className="landing-section-header landing-animate">
+              <h2 className="landing-section-title">Try the demo</h2>
+              <p className="landing-section-subtitle">
+                Experience the full payment flow with a connected wallet
+              </p>
+            </div>
+            <div className="landing-demo-content landing-animate">
+              <div className="landing-demo-text">
+                <h3 className="landing-demo-title">Interactive demo</h3>
+                <p className="landing-demo-description">
+                  Connect your wallet and explore the media library. Purchase access to premium content with USDC payments. 
+                  See how wallet authentication, session management, and payment processing work in real-time.
+                </p>
+                <ul className="landing-demo-features">
+                  <li>Browse premium media content</li>
+                  <li>Purchase time-limited access</li>
+                  <li>View protected content securely</li>
+                  <li>Track your entitlements</li>
+                </ul>
+                {isConnected ? (
+                  <button
+                    className="landing-cta-primary"
+                    onClick={() => navigate('/app')}
+                  >
+                    Enter demo
+                  </button>
+                ) : (
+                  <div className="landing-demo-connect">
+                    <ConnectKitButton.Custom>
+                      {({ show }) => (
+                        <button
+                          className="landing-cta-primary"
+                          onClick={show}
+                        >
+                          Connect wallet to start
+                        </button>
+                      )}
+                    </ConnectKitButton.Custom>
+                  </div>
+                )}
+              </div>
+              <div className="landing-demo-visual">
+                <div className="landing-demo-card">
+                  <div className="landing-demo-card-header">
+                    <div className="landing-demo-card-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    <div className="landing-demo-card-title">Media Library</div>
+                  </div>
+                  <div className="landing-demo-card-content">
+                    <div className="landing-demo-preview-grid">
+                      <div className="landing-demo-preview-item">
+                        <div className="landing-demo-preview-placeholder"></div>
+                        <div className="landing-demo-preview-badge locked">Locked</div>
+                      </div>
+                      <div className="landing-demo-preview-item">
+                        <div className="landing-demo-preview-placeholder"></div>
+                        <div className="landing-demo-preview-badge unlocked">Unlocked</div>
+                      </div>
+                      <div className="landing-demo-preview-item">
+                        <div className="landing-demo-preview-placeholder"></div>
+                        <div className="landing-demo-preview-badge locked">Locked</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="landing-section landing-section-faq" id="faq">
           <div className="landing-section-inner">
             <div className="landing-section-header landing-animate">
@@ -812,13 +887,19 @@ export default function LandingPage() {
               <h3 className="landing-footer-heading">More</h3>
               <nav className="landing-footer-nav">
                 <a href="#how-it-works" onClick={(e) => scrollToSection('how-it-works', e)}>How it works</a>
-                <a href="#features" onClick={(e) => scrollToSection('features', e)}>Features</a>
                 <a href="#benefits" onClick={(e) => scrollToSection('benefits', e)}>Why defdone</a>
                 <a href="#creators" onClick={(e) => scrollToSection('creators', e)}>For creators</a>
+                <a href="#features" onClick={(e) => scrollToSection('features', e)}>Features</a>
+                <a href="#demo" onClick={(e) => scrollToSection('demo', e)}>Demo</a>
                 <a href="#faq" onClick={(e) => scrollToSection('faq', e)}>FAQ</a>
-                <a href="#" onClick={(e) => { e.preventDefault(); navigate('/app'); }}>Demo</a>
               </nav>
             </div>
+          </div>
+          <div className="landing-footer-disclaimer">
+            <p className="landing-footer-disclaimer-text">
+              This is a test/demo website. We are not responsible for any losses, damages, or issues that may arise from using this service. 
+              Use at your own risk. This demo runs on testnet and is for demonstration purposes only.
+            </p>
           </div>
         </div>
       </footer>

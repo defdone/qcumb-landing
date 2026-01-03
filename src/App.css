@@ -54,6 +54,31 @@
   gap: 8px;
 }
 
+.dashboard-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 8px;
+  color: var(--dashboard-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dashboard-back-btn:hover {
+  color: var(--dashboard-text);
+  border-color: var(--dashboard-accent);
+  background: rgba(0, 102, 255, 0.05);
+}
+
+.dashboard-back-btn svg {
+  flex-shrink: 0;
+}
+
 .dashboard-logo {
   font-size: 24px;
   font-weight: 700;

@@ -884,6 +884,169 @@
 }
 
 /* FAQ */
+.landing-section-demo {
+  background: var(--landing-bg-secondary);
+}
+
+.landing-demo-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+  margin-top: 60px;
+}
+
+.landing-demo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.landing-demo-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--landing-text);
+  margin-bottom: 8px;
+}
+
+.landing-demo-description {
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--landing-text-secondary);
+}
+
+.landing-demo-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.landing-demo-features li {
+  font-size: 16px;
+  color: var(--landing-text-secondary);
+  padding-left: 24px;
+  position: relative;
+}
+
+.landing-demo-features li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--landing-accent);
+  font-weight: 700;
+}
+
+.landing-demo-connect {
+  margin-top: 8px;
+}
+
+.landing-demo-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.landing-demo-card {
+  width: 100%;
+  max-width: 500px;
+  background: var(--landing-bg-tertiary);
+  border: 1px solid var(--landing-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.landing-demo-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--landing-bg);
+  border-bottom: 1px solid var(--landing-border);
+}
+
+.landing-demo-card-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.landing-demo-card-dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--landing-text-muted);
+}
+
+.landing-demo-card-dots span:nth-child(1) {
+  background: #ff5f57;
+}
+
+.landing-demo-card-dots span:nth-child(2) {
+  background: #ffbd2e;
+}
+
+.landing-demo-card-dots span:nth-child(3) {
+  background: #28ca42;
+}
+
+.landing-demo-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--landing-text-secondary);
+  margin-left: auto;
+}
+
+.landing-demo-card-content {
+  padding: 24px;
+}
+
+.landing-demo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.landing-demo-preview-item {
+  position: relative;
+  aspect-ratio: 16/9;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.landing-demo-preview-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--landing-bg-secondary), var(--landing-bg-tertiary));
+  border: 1px solid var(--landing-border);
+}
+
+.landing-demo-preview-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+}
+
+.landing-demo-preview-badge.locked {
+  background: rgba(255, 95, 87, 0.2);
+  color: #ff5f57;
+  border: 1px solid rgba(255, 95, 87, 0.3);
+}
+
+.landing-demo-preview-badge.unlocked {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
 .landing-section-faq {
   background: var(--landing-bg-secondary);
 }
@@ -1060,6 +1223,22 @@
   color: var(--landing-accent);
 }
 
+.landing-footer-disclaimer {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--landing-border);
+  text-align: center;
+}
+
+.landing-footer-disclaimer-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--landing-text-muted);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
 /* Smooth scroll for anchor links */
 html {
   scroll-behavior: smooth;
@@ -1200,6 +1379,19 @@ section[id] {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .landing-demo-content {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .landing-demo-visual {
+    order: -1;
+  }
+
+  .landing-demo-preview-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .landing-footer-inner {
     padding: 80px 24px 40px;
   }
@@ -1265,6 +1457,19 @@ section[id] {
     grid-template-columns: 1fr;
   }
 
+  .landing-demo-content {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .landing-demo-visual {
+    order: -1;
+  }
+
+  .landing-demo-preview-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .landing-faq {
     grid-template-columns: 1fr;
   }
@@ -1280,5 +1485,14 @@ section[id] {
 
   .landing-footer-slogan {
     font-size: 24px;
+  }
+
+  .landing-footer-disclaimer {
+    margin-top: 32px;
+    padding-top: 24px;
+  }
+
+  .landing-footer-disclaimer-text {
+    font-size: 11px;
   }
 }
