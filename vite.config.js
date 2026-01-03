@@ -14,25 +14,25 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Split vendor chunks
+          // Simplified code splitting - only split large vendors
           if (id.includes('node_modules')) {
+            // Keep React together
             if (id.includes('react') || id.includes('react-dom')) {
               return 'react-vendor'
             }
-            if (id.includes('wagmi') || id.includes('viem') || id.includes('connectkit')) {
+            // Keep Web3 libraries together
+            if (id.includes('wagmi') || id.includes('viem') || id.includes('connectkit') || id.includes('@tanstack')) {
               return 'web3-vendor'
             }
+            // Keep router separate
             if (id.includes('react-router')) {
               return 'router-vendor'
             }
-            // Other node_modules
+            // All other vendors in one chunk
             return 'vendor'
           }
         },
       },
-    },
-    css: {
-      minify: 'esbuild',
     },
   },
 })
