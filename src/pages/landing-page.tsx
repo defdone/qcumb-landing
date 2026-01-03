@@ -34,6 +34,11 @@ export default function LandingPage() {
       e.stopPropagation()
     }
     
+    // Remove hash from URL if present
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    }
+    
     // Primary method: scroll to top element
     const topElement = document.getElementById('landing-top')
     if (topElement) {
@@ -52,6 +57,19 @@ export default function LandingPage() {
       // Fallback for browsers without smooth scroll support
       document.documentElement.scrollTop = 0
       document.body.scrollTop = 0
+    }
+  }
+
+  const scrollToSection = (sectionId: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    // Remove hash from URL
+    window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 
@@ -346,7 +364,11 @@ export default function LandingPage() {
                     </ConnectKitButton.Custom>
                   </div>
                 )}
-                <a href="#how-it-works" className="landing-cta-secondary">
+                <a 
+                  href="#how-it-works" 
+                  className="landing-cta-secondary"
+                  onClick={(e) => scrollToSection('how-it-works', e)}
+                >
                   Learn more
                 </a>
               </div>
@@ -789,11 +811,11 @@ export default function LandingPage() {
             <div className="landing-footer-col landing-footer-links">
               <h3 className="landing-footer-heading">More</h3>
               <nav className="landing-footer-nav">
-                <a href="#how-it-works">How it works</a>
-                <a href="#features">Features</a>
-                <a href="#benefits">Why defdone</a>
-                <a href="#creators">For creators</a>
-                <a href="#faq">FAQ</a>
+                <a href="#how-it-works" onClick={(e) => scrollToSection('how-it-works', e)}>How it works</a>
+                <a href="#features" onClick={(e) => scrollToSection('features', e)}>Features</a>
+                <a href="#benefits" onClick={(e) => scrollToSection('benefits', e)}>Why defdone</a>
+                <a href="#creators" onClick={(e) => scrollToSection('creators', e)}>For creators</a>
+                <a href="#faq" onClick={(e) => scrollToSection('faq', e)}>FAQ</a>
                 <a href="#" onClick={(e) => { e.preventDefault(); navigate('/app'); }}>Demo</a>
               </nav>
             </div>
