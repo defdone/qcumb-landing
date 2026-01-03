@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAccount } from 'wagmi'
 import SecureVideoPlayer from './components/secure-video-player'
 import SecureImageViewer from './components/secure-image-viewer'
 import PaymentModal from './components/payment-modal'
@@ -32,6 +33,7 @@ interface MediaInfo {
 function App() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isConnected } = useAccount()
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [serverStatus, setServerStatus] = useState<{
     online: boolean | null
@@ -482,6 +484,18 @@ function App() {
 
   const handlePlanSelect = (plan: PlanType) => {
     setSelectedPlan(plan)
+  }
+
+  // Redirect to landing page if wallet is not connected
+  useEffect(() => {
+    if (!isConnected) {
+      navigate('/', { replace: true })
+    }
+  }, [isConnected, navigate])
+
+  // Don't render anything if wallet is not connected (will redirect)
+  if (!isConnected) {
+    return null
   }
 
   return (
