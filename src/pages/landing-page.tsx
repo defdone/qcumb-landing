@@ -99,9 +99,10 @@ export default function LandingPage() {
             const viewportHeight = window.innerHeight
             
             // Check if section is in the top portion of viewport
-            // Use 20% of viewport height to activate scroll blocking
-            // This ensures page blocks before user scrolls too far down
-            const isAtTop = rect.top <= viewportHeight * 0.2
+            // For MacBook Pro (1440px or less), use smaller threshold to activate earlier
+            // For 4K screens (>= 2000px), use larger threshold to account for increased padding
+            const topThreshold = viewportHeight <= 1440 ? 0.1 : viewportHeight > 2000 ? 0.3 : 0.2
+            const isAtTop = rect.top <= viewportHeight * topThreshold
             // Lower threshold for visibility - just needs to be entering viewport
             // On 4K screens, section might be visible but not 70% of viewport
             const minVisibility = viewportHeight > 2000 ? 0.1 : 0.3
@@ -160,8 +161,11 @@ export default function LandingPage() {
       const rect = stepsSection.getBoundingClientRect()
       const viewportHeight = window.innerHeight
       
-      // Use 20% of viewport height to activate scroll blocking
-      const isAtTop = rect.top <= viewportHeight * 0.2
+      // For MacBook Pro (1440px or less), use smaller threshold to activate earlier
+      // This ensures the section is fully visible before animation starts
+      // For 4K screens (>= 2000px), use larger threshold to account for increased padding
+      const topThreshold = viewportHeight <= 1440 ? 0.1 : viewportHeight > 2000 ? 0.3 : 0.2
+      const isAtTop = rect.top <= viewportHeight * topThreshold
       // Bottom should be visible - adjust threshold for larger screens
       const bottomThreshold = viewportHeight > 2000 ? 0.05 : 0.15
       const isBottomVisible = rect.bottom > viewportHeight * bottomThreshold
@@ -228,8 +232,10 @@ export default function LandingPage() {
       const rect = stepsSection.getBoundingClientRect()
       const viewportHeight = window.innerHeight
       
-      // Use 20% of viewport height to activate scroll blocking
-      const isAtTop = rect.top <= viewportHeight * 0.2
+      // For MacBook Pro (1440px or less), use smaller threshold to activate earlier
+      // For 4K screens (>= 2000px), use larger threshold to account for increased padding
+      const topThreshold = viewportHeight <= 1440 ? 0.1 : viewportHeight > 2000 ? 0.3 : 0.2
+      const isAtTop = rect.top <= viewportHeight * topThreshold
       // Adjust threshold for larger screens
       const bottomThreshold = viewportHeight > 2000 ? 0.05 : 0.15
       const isBottomVisible = rect.bottom > viewportHeight * bottomThreshold

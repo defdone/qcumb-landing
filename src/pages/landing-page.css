@@ -1397,6 +1397,14 @@ section[id] {
   }
 }
 
+/* MacBook Pro specific adjustments (viewport height ~1440px, desktop width) */
+/* Only adjust padding, don't change layout - layout changes are for tablet/mobile only */
+@media (max-height: 1440px) and (min-height: 900px) and (min-width: 1025px) {
+  #how-it-works {
+    padding-top: 150px;
+  }
+}
+
 @media (max-width: 768px) {
   .landing-nav-inner {
     padding: 16px 20px;
