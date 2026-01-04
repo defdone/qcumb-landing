@@ -27,6 +27,7 @@ export default function LandingPage() {
   const [isSectionFullyVisible, setIsSectionFullyVisible] = useState(false)
   const stepsSectionRef = useRef<HTMLElement | null>(null)
   const currentStepIndexRef = useRef(0)
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
 
   const scrollToTop = (e?: React.MouseEvent) => {
     if (e) {
@@ -86,8 +87,25 @@ export default function LandingPage() {
     }
   }, [isConnected, navigate])
 
+  // Detect mobile/tablet on mount and resize
+  useEffect(() => {
+    const checkIsMobileOrTablet = () => {
+      setIsMobileOrTablet(window.innerWidth <= 1024)
+    }
+    
+    checkIsMobileOrTablet()
+    window.addEventListener('resize', checkIsMobileOrTablet)
+    
+    return () => {
+      window.removeEventListener('resize', checkIsMobileOrTablet)
+    }
+  }, [])
+
   useEffect(() => {
     // Check if steps section is fully visible using Intersection Observer
+    // Skip this for mobile/tablet - they use simple sequential animation
+    if (isMobileOrTablet) return
+    
     const stepsSection = document.getElementById('how-it-works')
     if (stepsSection) {
       stepsSectionRef.current = stepsSection
@@ -127,10 +145,13 @@ export default function LandingPage() {
         observer.disconnect()
       }
     }
-  }, [isStepsComplete])
+  }, [isStepsComplete, isMobileOrTablet])
 
   useEffect(() => {
     // Block page scroll when section is visible and animation is not complete
+    // Skip for mobile/tablet - they don't use scroll blocking
+    if (isMobileOrTablet) return
+    
     if (isSectionFullyVisible && !isStepsComplete) {
       document.body.style.overflow = 'hidden'
     } else {
@@ -140,9 +161,53 @@ export default function LandingPage() {
     return () => {
       document.body.style.overflow = ''
     }
-  }, [isSectionFullyVisible, isStepsComplete])
+  }, [isSectionFullyVisible, isStepsComplete, isMobileOrTablet])
+
+  // Simple sequential animation for mobile/tablet - no scroll blocking
+  useEffect(() => {
+    if (!isMobileOrTablet) return
+    
+    const stepsSection = document.getElementById('how-it-works')
+    if (!stepsSection) return
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio > 0.2) {
+            // Section is visible - start sequential animation
+            const allElements = Array.from(document.querySelectorAll('.landing-step, .landing-step-connector'))
+            
+            allElements.forEach((element, index) => {
+              setTimeout(() => {
+                element.classList.add('animate-in')
+              }, index * 300) // 300ms delay between each element
+            })
+            
+            // Mark as complete after all animations
+            setTimeout(() => {
+              setIsStepsComplete(true)
+            }, allElements.length * 300)
+            
+            observer.disconnect()
+          }
+        })
+      },
+      {
+        threshold: [0, 0.2, 0.5],
+        rootMargin: '0px'
+      }
+    )
+    
+    observer.observe(stepsSection)
+    
+    return () => {
+      observer.disconnect()
+    }
+  }, [isMobileOrTablet])
 
   useEffect(() => {
+    // Skip scroll-based animation for mobile/tablet
+    if (isMobileOrTablet) return
     if (isStepsComplete || !isSectionFullyVisible) return
 
     let lastWheelTime = 0
@@ -275,7 +340,7 @@ export default function LandingPage() {
       window.removeEventListener('wheel', handleWheel)
       window.removeEventListener('scroll', handleScroll)
     }
-  }, [isStepsComplete, isSectionFullyVisible])
+  }, [isStepsComplete, isSectionFullyVisible, isMobileOrTablet])
 
   useEffect(() => {
     // Intersection Observer for scroll animations - but NOT for steps/connectors
