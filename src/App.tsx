@@ -517,8 +517,11 @@ function App() {
               <span>Home</span>
             </button>
             <div className="dashboard-logo-wrapper">
-              <div className="dashboard-logo">defdone</div>
-              <span className="dashboard-logo-badge">web3</span>
+              <div className="brand-mark" aria-label="qcumb">
+                <span className="brand-q">q</span>
+                <span className="brand-cum">cum</span>
+                <span className="brand-b">b</span>
+              </div>
             </div>
           </div>
           <div className="dashboard-nav-right">

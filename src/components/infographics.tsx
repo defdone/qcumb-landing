@@ -19,8 +19,8 @@ export const BackendControlInfographic = () => (
     
     <defs>
       <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0066ff" />
-        <stop offset="100%" stopColor="#764ba2" />
+        <stop offset="0%" stopColor="#00E088" />
+        <stop offset="100%" stopColor="#00B870" />
       </linearGradient>
       <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
         <polygon points="0 0, 6 3, 0 6" fill="url(#gradient1)" />
@@ -45,8 +45,8 @@ export const WalletAuthInfographic = () => (
     
     <defs>
       <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0066ff" />
-        <stop offset="100%" stopColor="#764ba2" />
+        <stop offset="0%" stopColor="#00E088" />
+        <stop offset="100%" stopColor="#00B870" />
       </linearGradient>
     </defs>
   </svg>
@@ -72,8 +72,8 @@ export const DecentralizedStorageInfographic = () => (
     
     <defs>
       <linearGradient id="gradient3" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0066ff" />
-        <stop offset="100%" stopColor="#764ba2" />
+        <stop offset="0%" stopColor="#00E088" />
+        <stop offset="100%" stopColor="#00B870" />
       </linearGradient>
     </defs>
   </svg>
@@ -96,8 +96,8 @@ export const ContentProtectionInfographic = () => (
     
     <defs>
       <linearGradient id="gradient4" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0066ff" />
-        <stop offset="100%" stopColor="#764ba2" />
+        <stop offset="0%" stopColor="#00E088" />
+        <stop offset="100%" stopColor="#00B870" />
       </linearGradient>
     </defs>
   </svg>
@@ -122,8 +122,8 @@ export const WatermarkInfographic = () => (
     
     <defs>
       <linearGradient id="gradient5" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0066ff" />
-        <stop offset="100%" stopColor="#764ba2" />
+        <stop offset="0%" stopColor="#00E088" />
+        <stop offset="100%" stopColor="#00B870" />
       </linearGradient>
     </defs>
   </svg>
@@ -149,8 +149,8 @@ export const PaymentFlowInfographic = () => (
     
     <defs>
       <linearGradient id="gradient6" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0066ff" />
-        <stop offset="100%" stopColor="#764ba2" />
+        <stop offset="0%" stopColor="#00E088" />
+        <stop offset="100%" stopColor="#00B870" />
       </linearGradient>
       <marker id="arrowhead2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
         <polygon points="0 0, 6 3, 0 6" fill="url(#gradient6)" />
@@ -175,8 +175,8 @@ export const TimeLimitInfographic = () => (
     
     <defs>
       <linearGradient id="gradient7" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0066ff" />
-        <stop offset="100%" stopColor="#764ba2" />
+        <stop offset="0%" stopColor="#00E088" />
+        <stop offset="100%" stopColor="#00B870" />
       </linearGradient>
     </defs>
   </svg>
@@ -200,8 +200,8 @@ export const OptimizedAPIInfographic = () => (
     
     <defs>
       <linearGradient id="gradient8" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0066ff" />
-        <stop offset="100%" stopColor="#764ba2" />
+        <stop offset="0%" stopColor="#00E088" />
+        <stop offset="100%" stopColor="#00B870" />
       </linearGradient>
     </defs>
   </svg>
@@ -226,8 +226,8 @@ export const ProductionReadyInfographic = () => (
     
     <defs>
       <linearGradient id="gradient9" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0066ff" />
-        <stop offset="100%" stopColor="#764ba2" />
+        <stop offset="0%" stopColor="#00E088" />
+        <stop offset="100%" stopColor="#00B870" />
       </linearGradient>
     </defs>
   </svg>
@@ -250,8 +250,8 @@ export const TransparentRevenueInfographic = () => (
     
     <defs>
       <linearGradient id="gradient10" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0066ff" />
-        <stop offset="100%" stopColor="#764ba2" />
+        <stop offset="0%" stopColor="#00E088" />
+        <stop offset="100%" stopColor="#00B870" />
       </linearGradient>
     </defs>
   </svg>
@@ -273,8 +273,8 @@ export const CreatorRegistrationInfographic = () => (
     
     <defs>
       <linearGradient id="gradient11" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0066ff" />
-        <stop offset="100%" stopColor="#764ba2" />
+        <stop offset="0%" stopColor="#00E088" />
+        <stop offset="100%" stopColor="#00B870" />
       </linearGradient>
     </defs>
   </svg>
@@ -300,8 +300,8 @@ export const Web3MonetizationInfographic = () => (
     
     <defs>
       <linearGradient id="gradient12" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0066ff" />
-        <stop offset="100%" stopColor="#764ba2" />
+        <stop offset="0%" stopColor="#00E088" />
+        <stop offset="100%" stopColor="#00B870" />
       </linearGradient>
       <marker id="arrowhead3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
         <polygon points="0 0, 6 3, 0 6" fill="url(#gradient12)" />

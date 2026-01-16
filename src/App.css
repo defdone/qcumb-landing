@@ -1,15 +1,15 @@
-/* Dark theme variables for dashboard */
+/* Qcumb brand theme for dashboard */
 .app-dashboard {
-  --dashboard-bg: #0a0a0a;
-  --dashboard-bg-secondary: #111111;
-  --dashboard-bg-tertiary: #1a1a1a;
-  --dashboard-text: #ffffff;
-  --dashboard-text-secondary: #a0a0a0;
-  --dashboard-text-muted: #666666;
-  --dashboard-border: #252525;
-  --dashboard-accent: #0066ff;
-  --dashboard-accent-hover: #0052cc;
-  --dashboard-success: #22c55e;
+  --dashboard-bg: #000000;
+  --dashboard-bg-secondary: #050505;
+  --dashboard-bg-tertiary: #0a0a0a;
+  --dashboard-text: #00E088;
+  --dashboard-text-secondary: rgba(132, 224, 188, 0.8);
+  --dashboard-text-muted: rgba(132, 224, 188, 0.65);
+  --dashboard-border: rgba(0, 224, 136, 0.25);
+  --dashboard-accent: #00E088;
+  --dashboard-accent-hover: rgba(0, 224, 136, 0.8);
+  --dashboard-success: #00E088;
 }
 
 .app {
@@ -71,8 +71,8 @@
 
 .dashboard-back-btn:hover {
   color: var(--dashboard-text);
-  border-color: var(--dashboard-accent);
-  background: rgba(0, 102, 255, 0.05);
+  border-color: rgba(0, 224, 136, 0.55);
+  background: rgba(0, 224, 136, 0.08);
 }
 
 .dashboard-back-btn svg {
@@ -84,10 +84,6 @@
   font-weight: 700;
   letter-spacing: -0.5px;
   color: var(--dashboard-text);
-  background: linear-gradient(135deg, var(--dashboard-accent), #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .dashboard-logo-badge {
@@ -98,11 +94,10 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: linear-gradient(135deg, var(--dashboard-accent), #764ba2);
-  color: white;
+  background: transparent;
+  border: 1px solid var(--dashboard-border);
+  color: var(--dashboard-text-secondary);
   border-radius: 4px;
-  opacity: 0.9;
-  box-shadow: 0 2px 8px rgba(0, 102, 255, 0.3);
 }
 
 .dashboard-nav-right {
@@ -210,11 +205,11 @@
   }
 }
 
-/* Wallet Connect - Premium Design */
+/* Wallet Connect - Qcumb Design */
 .connect-wallet-btn {
-  background: white;
-  color: #667eea;
-  border: none;
+  background: transparent;
+  color: var(--dashboard-accent);
+  border: 1px solid rgba(0, 224, 136, 0.55);
   padding: 12px 24px;
   border-radius: 12px;
   font-size: 14px;
@@ -224,16 +219,20 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .connect-wallet-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  background: rgba(0, 224, 136, 0.08);
+  border-color: rgba(0, 224, 136, 0.75);
+}
+
+.connect-wallet-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 224, 136, 0.45);
 }
 
 .connect-wallet-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -486,7 +485,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 102, 204, 0.05) 0%, transparent 50%);
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 224, 136, 0.05) 0%, transparent 50%);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
@@ -498,8 +497,8 @@
 
 .media-card:hover {
   transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 12px 40px rgba(0, 102, 255, 0.2);
-  border-color: var(--dashboard-accent, var(--accent));
+  box-shadow: 0 12px 40px rgba(0, 224, 136, 0.15);
+  border-color: rgba(0, 224, 136, 0.55);
 }
 
 .media-card:active {
@@ -1136,8 +1135,8 @@
 .loading-spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
+  border: 3px solid rgba(0, 224, 136, 0.25);
+  border-top-color: #00E088;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 12px;

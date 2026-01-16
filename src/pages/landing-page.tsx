@@ -387,8 +387,11 @@ export default function LandingPage() {
       <nav className="landing-nav">
         <div className="landing-nav-inner">
           <div className="landing-logo-wrapper" onClick={scrollToTop}>
-            <div className="landing-logo">Defdone</div>
-            <span className="landing-logo-badge">web3</span>
+            <div className="brand-mark" aria-label="qcumb">
+              <span className="brand-q">q</span>
+              <span className="brand-cum">cum</span>
+              <span className="brand-b">b</span>
+            </div>
           </div>
           <div className="landing-nav-actions">
             <WalletConnect
@@ -408,7 +411,7 @@ export default function LandingPage() {
             <div className="landing-hero-text landing-animate">
               <div className="landing-hero-label">Wallet Authentication</div>
               <h1 className="landing-hero-title">
-                Premium media access powered by <span className="landing-gradient-text">x402 protocol</span>
+                Premium media access powered by <span className="landing-gradient-text">wallet authentication</span>
               </h1>
               <p className="landing-hero-description">
                 Connect your wallet to start a session. Purchase time-limited access to content with USDC payments. No accounts, no passwords—just your wallet.
@@ -446,19 +449,19 @@ export default function LandingPage() {
               <div className="landing-hero-badges">
                 <span className="landing-badge">
                   <span className="landing-badge-dot"></span>
-                  Base Sepolia
+                  Accountless access
                 </span>
                 <span className="landing-badge">
                   <span className="landing-badge-dot"></span>
-                  USDC Payments
+                  Time-limited entitlements
                 </span>
                 <span className="landing-badge">
                   <span className="landing-badge-dot"></span>
-                  EIP-3009
+                  Gasless USDC payments
                 </span>
                 <span className="landing-badge">
                   <span className="landing-badge-dot"></span>
-                  x402 Protocol
+                  Server-side enforcement
                 </span>
               </div>
             </div>
@@ -484,7 +487,7 @@ export default function LandingPage() {
                         <span className="landing-mockup-browser-icon">→</span>
                         <span className="landing-mockup-browser-icon">↻</span>
                       </div>
-                      <div className="landing-mockup-browser-url">defdone.com/app</div>
+                      <div className="landing-mockup-browser-url">qcumb.com/app</div>
                       <div className="landing-mockup-browser-menu">⋮</div>
                     </div>
                   </div>
@@ -518,20 +521,53 @@ export default function LandingPage() {
           <div className="landing-section-inner">
             <div className="landing-stats landing-animate">
               <div className="landing-stat">
+                <div className="landing-stat-number">Accountless</div>
+                <div className="landing-stat-label">Onboarding that converts</div>
+              </div>
+              <div className="landing-stat">
+                <div className="landing-stat-number">Time-limited</div>
+                <div className="landing-stat-label">Clear, enforceable entitlements</div>
+              </div>
+              <div className="landing-stat">
                 <div className="landing-stat-number">Gasless</div>
-                <div className="landing-stat-label">Payments</div>
+                <div className="landing-stat-label">Faster checkout flows</div>
               </div>
               <div className="landing-stat">
-                <div className="landing-stat-number">Wallet-only</div>
-                <div className="landing-stat-label">No accounts</div>
+                <div className="landing-stat-number">Secure</div>
+                <div className="landing-stat-label">Server is source of truth</div>
               </div>
-              <div className="landing-stat">
-                <div className="landing-stat-number">Server-side</div>
-                <div className="landing-stat-label">Security</div>
+            </div>
+          </div>
+        </section>
+        
+        <section className="landing-section landing-section-problem landing-section-alt" id="problem">
+          <div className="landing-section-inner">
+            <div className="landing-section-header landing-section-header-left landing-animate">
+              <div className="landing-kicker">Problem</div>
+              <h2 className="landing-section-title">Paid content still leaks revenue</h2>
+              <p className="landing-section-subtitle">
+                Users drop off when asked to create accounts, payments add friction, and access control is often client-side. 
+                The result is low conversion and high churn.
+              </p>
+            </div>
+            <div className="landing-split">
+              <div className="landing-panel landing-animate">
+                <h3 className="landing-panel-title">Friction kills conversion</h3>
+                <p className="landing-panel-text">
+                  Account creation, passwords, and multi-step checkout slow users down. Every extra step reduces paid conversion.
+                </p>
               </div>
-              <div className="landing-stat">
-                <div className="landing-stat-number">Instant</div>
-                <div className="landing-stat-label">Access</div>
+              <div className="landing-panel landing-animate">
+                <h3 className="landing-panel-title">Weak access control</h3>
+                <p className="landing-panel-text">
+                  Client-side gating and short-lived sessions leak premium content. Creators need server-side enforcement.
+                </p>
+              </div>
+              <div className="landing-panel landing-animate">
+                <h3 className="landing-panel-title">Payments feel expensive</h3>
+                <p className="landing-panel-text">
+                  Users abandon checkout when gas fees and complex flows appear. The experience must be as simple as one tap.
+                </p>
               </div>
             </div>
           </div>
@@ -542,7 +578,7 @@ export default function LandingPage() {
             <div className="landing-section-header landing-animate">
               <h2 className="landing-section-title">How it works</h2>
               <p className="landing-section-subtitle">
-                A simple flow for wallet-based authentication and pay-per-access media
+                A four-step flow that turns anonymous visitors into paid access
               </p>
             </div>
             <div className="landing-steps">
@@ -550,7 +586,7 @@ export default function LandingPage() {
                 <div className="landing-step-icon">01</div>
                 <h3 className="landing-step-title">Connect wallet</h3>
                 <p className="landing-step-description">
-                  Your wallet acts as your login. No email, password, or account creation required. Just connect and authenticate.
+                  Wallet is the identity. No email, password, or account creation. One click to start a session.
                 </p>
               </div>
               <div className="landing-step-connector" data-connector="1"></div>
@@ -558,7 +594,7 @@ export default function LandingPage() {
                 <div className="landing-step-icon">02</div>
                 <h3 className="landing-step-title">Session verification</h3>
                 <p className="landing-step-description">
-                  Backend verifies your wallet session and returns your active entitlements automatically. Secure and instant.
+                  Backend verifies the session and returns entitlements instantly. Server is the source of truth.
                 </p>
               </div>
               <div className="landing-step-connector" data-connector="2"></div>
@@ -566,7 +602,7 @@ export default function LandingPage() {
                 <div className="landing-step-icon">03</div>
                 <h3 className="landing-step-title">Purchase access</h3>
                 <p className="landing-step-description">
-                  Choose a plan (24h or 7d) and complete payment using USDC via EIP-3009 transfer authorization. Gasless transactions.
+                  User selects a plan and signs a gasless USDC authorization. The backend executes payment.
                 </p>
               </div>
               <div className="landing-step-connector" data-connector="3"></div>
@@ -574,7 +610,7 @@ export default function LandingPage() {
                 <div className="landing-step-icon">04</div>
                 <h3 className="landing-step-title">Access content</h3>
                 <p className="landing-step-description">
-                  Access is granted immediately. Your entitlement expires based on the plan you selected. Transparent and reliable.
+                  Access is granted instantly and expires automatically. Clear, predictable access windows.
                 </p>
               </div>
             </div>
@@ -584,9 +620,9 @@ export default function LandingPage() {
         <section className="landing-section landing-section-benefits" id="benefits">
           <div className="landing-section-inner">
             <div className="landing-section-header landing-animate">
-              <h2 className="landing-section-title">Why defdone</h2>
+              <h2 className="landing-section-title">Why qcumb wins</h2>
               <p className="landing-section-subtitle">
-                Built for production with a focus on reliability, security, and user experience
+                Revenue-first infrastructure with enterprise-grade control
               </p>
             </div>
             <div className="landing-benefits">
@@ -594,54 +630,54 @@ export default function LandingPage() {
                 <div className="landing-benefit-icon">
                   <BackendControlInfographic />
                 </div>
-                <h3 className="landing-benefit-title">Backend-driven access control</h3>
+                <h3 className="landing-benefit-title">Server-side enforcement</h3>
                 <p className="landing-benefit-description">
-                  The UI relies on the `hasAccess` flag returned by the API. No client-side access checks. Server is the source of truth.
+                  Access is enforced on the backend, reducing leakage and making entitlements reliable for paid content.
                 </p>
               </div>
               <div className="landing-benefit landing-animate">
                 <div className="landing-benefit-icon">
                   <TimeLimitInfographic />
                 </div>
-                <h3 className="landing-benefit-title">Time-limited entitlements</h3>
+                <h3 className="landing-benefit-title">Time-limited access</h3>
                 <p className="landing-benefit-description">
-                  Plans are scoped by duration (24h or 7d). Expiry timestamps are visible and enforced server-side. No surprises.
+                  Clear access windows improve conversion and reduce refunds. Expiry is automatic and transparent.
                 </p>
               </div>
               <div className="landing-benefit landing-animate">
                 <div className="landing-benefit-icon">
                   <OptimizedAPIInfographic />
                 </div>
-                <h3 className="landing-benefit-title">Optimized API usage</h3>
+                <h3 className="landing-benefit-title">Scalable API design</h3>
                 <p className="landing-benefit-description">
-                  Debounced media fetching prevents rate limiting. Session state is managed efficiently. Built for scale.
+                  Efficient session and media fetching reduces cost and supports high-concurrency usage.
                 </p>
               </div>
               <div className="landing-benefit landing-animate">
                 <div className="landing-benefit-icon">
                   <PaymentFlowInfographic />
                 </div>
-                <h3 className="landing-benefit-title">Gasless payments</h3>
+                <h3 className="landing-benefit-title">Frictionless payments</h3>
                 <p className="landing-benefit-description">
-                  EIP-3009 enables gasless USDC transfers. You sign once, backend executes. Lower costs, better UX.
+                  Gasless USDC flows remove payment friction and improve checkout conversion for premium content.
                 </p>
               </div>
               <div className="landing-benefit landing-animate">
                 <div className="landing-benefit-icon">
                   <WalletAuthInfographic />
                 </div>
-                <h3 className="landing-benefit-title">Wallet-first authentication</h3>
+                <h3 className="landing-benefit-title">Accountless onboarding</h3>
                 <p className="landing-benefit-description">
-                  No traditional accounts. Your wallet address is your identity. Simple, secure, and decentralized.
+                  Wallet-based identity means fewer steps, fewer passwords, and higher completion rates.
                 </p>
               </div>
               <div className="landing-benefit landing-animate">
                 <div className="landing-benefit-icon">
                   <ProductionReadyInfographic />
                 </div>
-                <h3 className="landing-benefit-title">Production-ready</h3>
+                <h3 className="landing-benefit-title">Enterprise-ready core</h3>
                 <p className="landing-benefit-description">
-                  Built with best practices. Error handling, session management, and rate limiting all included.
+                  Robust session management, rate limiting, and error handling allow fast enterprise adoption.
                 </p>
               </div>
             </div>
@@ -665,12 +701,12 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="landing-section landing-section-creators" id="creators">
+        <section className="landing-section landing-section-creators landing-section-alt" id="model">
           <div className="landing-section-inner">
             <div className="landing-section-header landing-animate">
-              <h2 className="landing-section-title">For creators</h2>
+              <h2 className="landing-section-title">Business model</h2>
               <p className="landing-section-subtitle">
-                Monetize your content with enterprise-grade security and transparent revenue sharing
+                Multiple revenue streams across creators, platforms, and enterprise
               </p>
             </div>
             <div className="landing-benefits">
@@ -678,54 +714,54 @@ export default function LandingPage() {
                 <div className="landing-benefit-icon">
                   <DecentralizedStorageInfographic />
                 </div>
-                <h3 className="landing-benefit-title">Decentralized storage</h3>
+                <h3 className="landing-benefit-title">Transaction take rate</h3>
                 <p className="landing-benefit-description">
-                  Your content is stored on decentralized storage networks. No single point of failure. Permanent, censorship-resistant, and truly yours.
+                  Percentage-based fee on premium access purchases. Scales with creator revenue and platform growth.
                 </p>
               </div>
               <div className="landing-benefit landing-animate">
                 <div className="landing-benefit-icon">
                   <ContentProtectionInfographic />
                 </div>
-                <h3 className="landing-benefit-title">Advanced content protection</h3>
+                <h3 className="landing-benefit-title">Creator tools subscription</h3>
                 <p className="landing-benefit-description">
-                  Media processors automatically blur and distort previews. Content never leaks. Server-side processing ensures your original files stay secure.
+                  Premium tooling for content protection, analytics, and audience management.
                 </p>
               </div>
               <div className="landing-benefit landing-animate">
                 <div className="landing-benefit-icon">
                   <WatermarkInfographic />
                 </div>
-                <h3 className="landing-benefit-title">Watermark detection</h3>
+                <h3 className="landing-benefit-title">Enterprise licensing</h3>
                 <p className="landing-benefit-description">
-                  Invisible watermarks embedded in your content enable detection and tracking. Know where your content appears across the web.
+                  White-label and API licensing for platforms that need secure access gating and payments.
                 </p>
               </div>
               <div className="landing-benefit landing-animate">
                 <div className="landing-benefit-icon">
                   <TransparentRevenueInfographic />
                 </div>
-                <h3 className="landing-benefit-title">Transparent revenue</h3>
+                <h3 className="landing-benefit-title">Clear revenue share</h3>
                 <p className="landing-benefit-description">
-                  Clear, upfront pricing for content access. You set the rates. Payments are processed automatically. No hidden fees, no surprises.
+                  Transparent split and automated payouts keep creator trust high.
                 </p>
               </div>
               <div className="landing-benefit landing-animate">
                 <div className="landing-benefit-icon">
                   <CreatorRegistrationInfographic />
                 </div>
-                <h3 className="landing-benefit-title">Creator registration</h3>
+                <h3 className="landing-benefit-title">Fast onboarding</h3>
                 <p className="landing-benefit-description">
-                  Coming soon: Register as a creator with your wallet. Upload content, set pricing, and start earning. Simple onboarding, powerful tools.
+                  Wallet-first registration removes friction and accelerates creator acquisition.
                 </p>
               </div>
               <div className="landing-benefit landing-animate">
                 <div className="landing-benefit-icon">
                   <Web3MonetizationInfographic />
                 </div>
-                <h3 className="landing-benefit-title">Web3-native monetization</h3>
+                <h3 className="landing-benefit-title">Programmable payments</h3>
                 <p className="landing-benefit-description">
-                  Built for the decentralized web. Wallet-based authentication, on-chain payments, and transparent revenue distribution. No intermediaries.
+                  On-chain payments allow flexible pricing, bundles, and time-based access models.
                 </p>
               </div>
             </div>
@@ -755,79 +791,66 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="landing-section landing-section-features" id="features">
+        <section className="landing-section landing-section-features" id="traction">
           <div className="landing-section-inner">
             <div className="landing-section-header landing-animate">
-              <h2 className="landing-section-title">Technical features</h2>
+              <h2 className="landing-section-title">Traction & readiness</h2>
               <p className="landing-section-subtitle">
-                Advanced capabilities that make this demo production-ready
+                Product foundation built for pilots and scaled launches
               </p>
             </div>
             <div className="landing-features">
               <div className="landing-feature landing-animate">
-                <h3 className="landing-feature-title">Session management</h3>
+                <h3 className="landing-feature-title">Live product demo</h3>
                 <p className="landing-feature-description">
-                  Secure wallet session tokens with server-side verification. Automatic refresh and expiry handling.
+                  Full payment flow, gated content, and entitlement handling are already implemented.
                 </p>
               </div>
               <div className="landing-feature landing-animate">
-                <h3 className="landing-feature-title">Entitlement tracking</h3>
+                <h3 className="landing-feature-title">Payment rails integrated</h3>
                 <p className="landing-feature-description">
-                  Real-time entitlement status with expiry tracking. Automatic access revocation when expired.
+                  Gasless USDC payments with server-side execution and transparent access windows.
                 </p>
               </div>
               <div className="landing-feature landing-animate">
-                <h3 className="landing-feature-title">Payment processing</h3>
+                <h3 className="landing-feature-title">Secure access layer</h3>
                 <p className="landing-feature-description">
-                  EIP-3009 compliant payment flow. Signed authorization messages processed securely on the backend.
+                  Server-enforced access control and session verification keep content protected.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="landing-section landing-section-demo" id="demo">
+        <section className="landing-section landing-section-demo landing-section-alt" id="go-to-market">
           <div className="landing-section-inner">
             <div className="landing-section-header landing-animate">
-              <h2 className="landing-section-title">Try the demo</h2>
+              <h2 className="landing-section-title">Go-to-market</h2>
               <p className="landing-section-subtitle">
-                Experience the full payment flow with a connected wallet
+                Focused on high-intent segments with clear revenue mechanics
               </p>
             </div>
             <div className="landing-demo-content landing-animate">
               <div className="landing-demo-text">
-                <h3 className="landing-demo-title">Interactive demo</h3>
+                <h3 className="landing-demo-title">Distribution strategy</h3>
                 <p className="landing-demo-description">
-                  Connect your wallet and explore the media library. Purchase access to premium content with USDC payments. 
-                  See how wallet authentication, session management, and payment processing work in real-time.
+                  Start with premium creators and platforms that already sell exclusive content. 
+                  Expand into enterprise licensing for content publishers and media platforms.
                 </p>
                 <ul className="landing-demo-features">
-                  <li>Browse premium media content</li>
-                  <li>Purchase time-limited access</li>
-                  <li>View protected content securely</li>
-                  <li>Track your entitlements</li>
+                  <li>Creator partnerships for early traction</li>
+                  <li>Platform integrations with revenue share</li>
+                  <li>Enterprise licensing for content publishers</li>
+                  <li>Composable APIs for developers</li>
                 </ul>
-                {isConnected ? (
+                <div className="landing-demo-connect">
                   <button
                     className="landing-cta-primary"
                     onClick={() => navigate('/app')}
                   >
-                    Enter demo
+                    View product demo
                   </button>
-                ) : (
-                  <div className="landing-demo-connect">
-                    <ConnectKitButton.Custom>
-                      {({ show }) => (
-                        <button
-                          className="landing-cta-primary"
-                          onClick={show}
-                        >
-                          Connect wallet to start
-                        </button>
-                      )}
-                    </ConnectKitButton.Custom>
-                  </div>
-                )}
+                </div>
               </div>
               <div className="landing-demo-visual">
                 <div className="landing-demo-card">
@@ -868,39 +891,39 @@ export default function LandingPage() {
             </div>
             <div className="landing-faq">
               <div className="landing-faq-item landing-animate">
-                <h3 className="landing-faq-question">Do I need to create an account?</h3>
+                <h3 className="landing-faq-question">How does qcumb make money?</h3>
                 <p className="landing-faq-answer">
-                  No. Your wallet address serves as your identity. Connect your wallet to authenticate. No email, password, or registration required.
+                  Revenue comes from transaction fees, creator subscriptions, and enterprise/API licensing.
                 </p>
               </div>
               <div className="landing-faq-item landing-animate">
-                <h3 className="landing-faq-question">What network is supported?</h3>
+                <h3 className="landing-faq-question">What is the key moat?</h3>
                 <p className="landing-faq-answer">
-                  This demo runs on Base Sepolia testnet. Payments use USDC on Base Sepolia. Mainnet support can be added easily.
+                  A combination of low-friction checkout, server-enforced access control, and programmable payments.
                 </p>
               </div>
               <div className="landing-faq-item landing-animate">
-                <h3 className="landing-faq-question">How does payment work?</h3>
+                <h3 className="landing-faq-question">Who is the target customer?</h3>
                 <p className="landing-faq-answer">
-                  Payments use EIP-3009 (TransferWithAuthorization) for gasless USDC transfers. You sign an authorization message, and the backend executes the transfer. No gas fees for you.
+                  Premium creators, content platforms, and publishers that need secure access and monetization.
                 </p>
               </div>
               <div className="landing-faq-item landing-animate">
-                <h3 className="landing-faq-question">What happens when my access expires?</h3>
+                <h3 className="landing-faq-question">How do you scale distribution?</h3>
                 <p className="landing-faq-answer">
-                  When your entitlement expires, you'll need to purchase access again to view the content. The UI will show locked content and a purchase option. Expiry is clearly displayed.
+                  Partnerships with creators and platforms, followed by enterprise licensing and developer integrations.
                 </p>
               </div>
               <div className="landing-faq-item landing-animate">
-                <h3 className="landing-faq-question">Is my wallet data stored?</h3>
+                <h3 className="landing-faq-question">What is the next milestone?</h3>
                 <p className="landing-faq-answer">
-                  Only your wallet address and session tokens are stored server-side for authentication. No private keys or personal data is ever stored or transmitted.
+                  Move from demo to pilot programs with paying creators and platform partners.
                 </p>
               </div>
               <div className="landing-faq-item landing-animate">
-                <h3 className="landing-faq-question">Can I use this in production?</h3>
+                <h3 className="landing-faq-question">What are the main risks?</h3>
                 <p className="landing-faq-answer">
-                  This is a production-ready demo. All core features are implemented: session management, payment processing, access control, and error handling. Ready to deploy.
+                  Market adoption and regulatory changes. The platform is designed to adapt with compliance requirements.
                 </p>
               </div>
             </div>
@@ -913,7 +936,7 @@ export default function LandingPage() {
           <div className="landing-footer-content">
             <div className="landing-footer-col landing-footer-brand">
               <div className="landing-footer-slogan">
-                Consider <span className="landing-footer-accent">IT</span> done.
+                Monetize premium content with <span className="landing-footer-accent">qcumb</span>.
               </div>
               <div className="landing-footer-social">
                 <a href="https://linkedin.com/company/defdone" className="landing-footer-social-link" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
@@ -928,7 +951,7 @@ export default function LandingPage() {
                 </a>
               </div>
               <div className="landing-footer-copyright">
-                Copyright defdone 2025
+                Copyright Defdone 2025
               </div>
             </div>
 
@@ -947,7 +970,7 @@ export default function LandingPage() {
                   <circle cx="12" cy="10" r="3"/>
                 </svg>
                 <div>
-                  <div>Defdone Sp. z o.o.</div>
+                  <div>Defdone</div>
                   <div>Floriana Stablewskiego 43/4</div>
                   <div>60-213 Poznan, Poland</div>
                 </div>
@@ -958,7 +981,7 @@ export default function LandingPage() {
               <h3 className="landing-footer-heading">More</h3>
               <nav className="landing-footer-nav">
                 <a href="#how-it-works" onClick={(e) => scrollToSection('how-it-works', e)}>How it works</a>
-                <a href="#benefits" onClick={(e) => scrollToSection('benefits', e)}>Why defdone</a>
+                <a href="#benefits" onClick={(e) => scrollToSection('benefits', e)}>Why qcumb</a>
                 <a href="#creators" onClick={(e) => scrollToSection('creators', e)}>For creators</a>
                 <a href="#features" onClick={(e) => scrollToSection('features', e)}>Features</a>
                 <a href="#demo" onClick={(e) => scrollToSection('demo', e)}>Demo</a>
