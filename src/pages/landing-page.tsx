@@ -387,11 +387,11 @@ export default function LandingPage() {
       <nav className="landing-nav">
         <div className="landing-nav-inner">
           <div className="landing-logo-wrapper" onClick={scrollToTop}>
-            <div className="brand-mark" aria-label="qcumb">
-              <span className="brand-q">q</span>
-              <span className="brand-cum">cum</span>
-              <span className="brand-b">b</span>
-            </div>
+            <img 
+              src="/logoQC - base - H.png" 
+              alt="qcumb" 
+              className="landing-logo-img"
+            />
           </div>
           <div className="landing-nav-actions">
             <WalletConnect
