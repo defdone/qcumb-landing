@@ -1,0 +1,262 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* Qcumb brand tokens */
+  --bg: #000000;
+  --bg-secondary: #050505;
+  --fg: #00E088;
+  --fg-2: #84E0BC;
+  --muted: rgba(132, 224, 188, 0.65);
+  --line: rgba(0, 224, 136, 0.55);
+  --border: rgba(0, 224, 136, 0.25);
+  --focus: rgba(0, 224, 136, 0.45);
+
+  /* Compatibility tokens */
+  --text: var(--fg-2);
+  --text-secondary: rgba(132, 224, 188, 0.8);
+  --text-muted: var(--muted);
+  --accent: var(--fg);
+  --accent-hover: rgba(0, 224, 136, 0.8);
+  --success: #00E088;
+  --warning: #84E0BC;
+  --error: #ff6b6b;
+
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Default: landing page style (full width, no padding) - prevents white flash */
+#root {
+  height: auto;
+  min-height: 100vh;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  /* Ensure dark background - no white flash */
+  background: transparent;
+}
+
+/* Landing page uses full width */
+body.landing-mode {
+  overflow: auto;
+}
+
+body.landing-mode #root {
+  /* Already set as default above */
+}
+
+/* Dashboard uses full width */
+body.dashboard-mode {
+  overflow: hidden;
+  /* Dashboard can have different background if needed */
+  background: #0a0a0a;
+}
+
+body.dashboard-mode #root {
+  max-width: 100%;
+  padding: 0;
+  height: 100vh;
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--fg);
+  color: #000000;
+}
+
+a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--fg);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  opacity: 0.9;
+}
+
+code, .mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Smooth Animations */
+* {
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+/* Touch-friendly on mobile */
+@media (max-width: 768px) {
+  button,
+  a[role="button"],
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Minimal Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--line);
+}
+
+/* Qcumb brand mark */
+.brand-mark {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.brand-q,
+.brand-b {
+  color: var(--fg);
+}
+
+.brand-cum {
+  color: var(--fg-2);
+}
+
+/* Typography scale */
+.h0, .landing-hero-title {
+  font-size: clamp(44px, 7vw, 80px);
+  font-weight: 800;
+  color: var(--fg);
+  line-height: 1.05;
+}
+
+h1, .h1 {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+h2, .h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+h3, .h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+h4, .h4 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.body-small {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.body-xsmall {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Primary button */
+.btn-primary {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--fg);
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: rgba(0, 224, 136, 0.08);
+  border-color: rgba(0, 224, 136, 0.75);
+}
+
+.btn-primary:active {
+  background: rgba(0, 224, 136, 0.12);
+}
+
+.btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus);
+}
+
+/* Secondary button */
+.btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(132, 224, 188, 0.35);
+  color: rgba(132, 224, 188, 0.9);
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(132, 224, 188, 0.06);
+}
+
+.btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus);
+}
+
+/* Input styles */
+input, textarea {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  color: var(--fg-2);
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+input::placeholder, textarea::placeholder {
+  color: rgba(132, 224, 188, 0.45);
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--line);
+  box-shadow: 0 0 0 2px var(--focus);
+}
