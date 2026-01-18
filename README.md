@@ -1,222 +1,195 @@
-# x402 Payment Flow - Frontend
+# qcumb
 
-Frontend application demonstrating the x402 payment protocol with real on-chain USDC payments via EIP-3009 (TransferWithAuthorization).
+Wallet-native premium content platform with x402 payments (EIP-3009 TransferWithAuthorization) and session-based access control.
+
+## Overview
+
+qcumb is a Next.js app that combines:
+
+- wallet-based authentication (no passwords)
+- x402 paywall for premium media
+- entitlement-aware content access
+- creator/fan flows driven by a real backend
+
+The UI lives in `/home` (app feed) and `/login` (wallet login). The landing page is served from `/` via the business layout.
+
+## What Works
+
+- Wallet login via nonce/sign/verify flow
+- Session persistence and entitlement refresh
+- Feed, creator profiles, post view, purchases
+- x402 payment modal and on-chain USDC authorization
+- Protected media access via backend-signed URLs
+- Role-based routes (fan/creator/admin)
+
+## Current Limitations
+
+- Creator dashboard is read-only (upload/edit coming later)
+- Settings are read-only (role/wallet only)
 
 ## Architecture
 
-This frontend connects to an x402-server backend that handles:
-- HTTP 402 responses with payment requirements
-- Payment verification via EIP-712 signatures
-- Settlement through the x402 facilitator
-- Media file serving with token-based access
+### High-level
 
-### Payment Flow
+```text
+Next.js App Router
+├── /(business)         -> Landing page
+├── /login              -> Wallet login
+└── /home/*             -> App (Wouter inside)
+```
 
-1. User clicks on locked content
-2. Frontend sends POST to `/media/:id/access`
-3. Backend returns HTTP 402 with `paymentRequired` object
-4. User signs EIP-712 authorization (EIP-3009)
-5. Frontend sends signed payload to backend
-6. Backend verifies and settles via facilitator
-7. Backend returns `mediaUrl` with access token
-8. Content is unlocked
+### App shell
 
-### Protocol Details
+```text
+/home/*
+  -> app/home/AppClient.tsx
+     -> features/app/src/App.tsx (Wouter router)
+        -> pages/* (fan-home, creator-profile, post-view, etc.)
+```
 
-- **x402 Version**: 2
-- **Signature**: EIP-712 typed data (TransferWithAuthorization)
+## Flow Diagrams
+
+### Auth Flow (wallet session)
+
+1) User connects wallet on `/login`
+2) Frontend requests nonce from backend (`POST /wallet/nonce`)
+3) User signs message in wallet
+4) Frontend verifies signature (`POST /wallet/verify`)
+5) Backend returns `sessionToken` stored as `X-Wallet-Session`
+
+### Payment Flow (x402)
+
+1) User opens locked post
+2) Frontend calls `POST /media/:id/access`
+3) Backend returns `402 Payment Required` with payment requirements
+4) User signs EIP-712 authorization (EIP-3009)
+5) Frontend submits signed payload to backend
+6) Backend verifies and returns `mediaUrl` + `grant`
+7) Frontend unlocks content
+
+## Payment Details
+
+- **Protocol**: x402 v2
+- **Signature**: EIP-712 typed data (TransferWithAuthorization, EIP-3009)
 - **Asset**: USDC (6 decimals)
-- **Network**: Base Sepolia (testnet) / Base (mainnet)
-- **Price**: $0.01 USDC per media item
+- **Network**: Base Sepolia / Base
+- **Session header**: `X-Wallet-Session` (from localStorage)
 
-## Features
-
-### Server Status Indicator
-- Real-time server connection status (online/offline)
-- Displays network name (Base Sepolia / Base Mainnet)
-- Auto-refreshes media when server comes back online
-
-### Wallet Management
-- Connect/disconnect wallet functionality
-- Persists connection state across page refreshes
-- Manual disconnect prevents auto-reconnect until user clicks Connect again
-- Supports account switching in wallet extension
-
-### Media Preview Security
-- Preview images/videos served from `/media/preview/:id` (server-side blur recommended)
-- Full content served with token after payment: `/media/:file?token=...`
-- Placeholder shown when server is offline
-
-### Payment Modal
-- Step-by-step progress indicator (Request → Sign → Settle → Done)
-- Real-time status updates during transaction
-- Explorer link after successful payment
-- Manual close - user controls when to dismiss
-
-### Per-Wallet Content Access
-- Unlocked content stored per wallet address in sessionStorage
-- Different wallets have separate unlock states
-- Switching wallets shows appropriate locked/unlocked state
-
-## Setup
-
-### Prerequisites
-
-- Node.js 18+
-- MetaMask or Coinbase Wallet
-- USDC on Base Sepolia (for testing)
-- ETH on Base Sepolia (for gas)
-
-### Installation
-
-```bash
-npm install
-cp .env.example .env
-```
-
-### Configuration
-
-Edit `.env`:
-
-```env
-# Backend API URL
-VITE_API_URL=http://localhost:3000
-```
-
-### Running
-
-Start the x402-server backend first (in another terminal):
-
-```bash
-# In x402-server directory
-npm run dev
-```
-
-Then start this frontend:
-
-```bash
-npm run dev
-```
-
-Open http://localhost:5173
-
-## Project Structure
-
-```
-src/
-  config/
-    x402-config.ts       # API config, types, formatters
-  hooks/
-    use-x402-payment.ts  # Payment logic, EIP-712 signing, wallet management
-  components/
-    video-player.tsx     # Video with paywall and server status handling
-    image-viewer.tsx     # Image with paywall and server status handling
-    payment-modal.tsx    # Payment UI with progress steps
-    payment-modal.css    # Payment modal styles
-    wallet-connect.tsx   # Wallet connection UI
-  App.tsx                # Main application
-  App.css                # Application styles
-```
-
-## API Endpoints
-
-### Preview (no auth required)
-```
-GET /media/preview/video
-GET /media/preview/image
-```
-
-### Request Payment Requirements
-```
-POST /media/video/access
-POST /media/image/access
-```
-
-### Response (HTTP 402)
+### Minimal payload (accepted by backend)
 
 ```json
 {
-  "success": false,
-  "error": "Payment Required",
-  "media": {
-    "id": "video",
-    "title": "Premium Video",
-    "type": "video",
-    "priceUsd": 0.01
+  "x402Version": 2,
+  "resource": {
+    "description": "string",
+    "mimeType": "string"
   },
-  "paymentRequired": {
-    "x402Version": 2,
-    "accepts": [{
-      "scheme": "exact",
-      "network": "eip155:84532",
-      "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-      "payTo": "0x...",
-      "amount": "10000"
-    }]
-  }
-}
-```
-
-### Submit Payment
-
-```json
-POST /media/video/access
-{
-  "message": {
-    "metadata": {
-      "x402.payment.payload": {
-        "x402Version": 2,
-        "resource": { ... },
-        "accepted": { ... },
-        "payload": {
-          "signature": "0x...",
-          "authorization": {
-            "from": "0x...",
-            "to": "0x...",
-            "value": "10000",
-            "validAfter": "0",
-            "validBefore": "...",
-            "nonce": "0x..."
-          }
-        }
-      },
-      "x402.payment.status": "payment-submitted"
+  "accepted": {
+    "scheme": "exact",
+    "network": "eip155:84532",
+    "payTo": "0x...",
+    "asset": "0x...",
+    "amount": "10000",
+    "maxTimeoutSeconds": 300,
+    "extra": { "name": "USDC", "version": "2" }
+  },
+  "payload": {
+    "signature": "0x...",
+    "authorization": {
+      "from": "0x...",
+      "to": "0x...",
+      "value": "10000",
+      "validAfter": "0",
+      "validBefore": "1712345678",
+      "nonce": "0x..."
     }
   }
 }
 ```
 
-### Success Response
+## Routes
 
-```json
-{
-  "success": true,
-  "mediaUrl": "http://localhost:3000/media/video.mp4?token=...",
-  "mediaType": "video",
-  "grant": {
-    "id": "grant-...",
-    "mediaId": "video",
-    "payer": "0x...",
-    "expiresAt": 1234567890
-  },
-  "settlement": {
-    "success": true,
-    "transaction": "0x...",
-    "network": "eip155:84532"
-  }
-}
+- `/`            -> landing page (business)
+- `/login`       -> wallet login
+- `/home`        -> app feed
+- `/home/*`      -> internal app routes (Wouter)
+
+## API Endpoints (frontend usage)
+
+- `POST /wallet/nonce`
+- `POST /wallet/verify`
+- `GET /wallet/entitlements`
+- `GET /profiles/me`
+- `POST /profiles/role`
+- `GET /posts`
+- `GET /posts/:id`
+- `GET /purchases`
+- `POST /media/:id/access` (x402)
+- `POST /stream/access/:assetId`
+
+## Tech Stack
+
+- Next.js App Router (React 18)
+- Wouter for in-app routing
+- Tailwind CSS + shadcn UI components
+- wagmi + connectkit for wallet connection
+- TanStack Query for API caching
+
+## Project Structure
+
+```text
+app/
+  (business)/            Landing page
+  login/                 Wallet login
+  home/                  App entry (AppClient)
+features/
+  app/                   Wouter app + UI
+  auth/                  Wallet session + x402 config
+  business/              Landing page sections
+  shared/                Shared styles/shims
 ```
 
-### Protected Media (with token)
+## Environment
+
+Create `.env`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3000
 ```
-GET /media/video.mp4?token=...
-GET /media/image.jpg?token=...
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
 ```
 
-## Testnet Resources
+## Local Development
 
-- Base Sepolia Faucet: https://www.coinbase.com/faucets/base-ethereum-sepolia-faucet
-- USDC Faucet: https://faucet.circle.com/
-- Block Explorer: https://sepolia.basescan.org
+1) Start the backend (x402 server):
 
-Wszelkie prawa zastrzeżone. 2025 Defdone.
+```bash
+# in backend repo
+npm run dev
+```
+
+1) Start frontend:
+
+```bash
+npm install
+npm run dev
+```
+
+Open <http://localhost:3000>
+
+## Troubleshooting
+
+- **429 Too Many Requests**: backend rate-limit; frontend has cooldowns but retry after a few seconds.
+- **No wallet detected**: ensure MetaMask/Coinbase Wallet is installed.
+- **Payment fails**: check network (Base Sepolia) and USDC balance.
+
+---
+
+Copyright © 2026 Defdone
