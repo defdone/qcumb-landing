@@ -346,6 +346,17 @@
   overflow: visible;
 }
 
+/* Disable flicker/flash animations for the hero visual */
+.landing-hero-visual.landing-animate {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+.landing-hero-visual .landing-mockup-glow {
+  animation: none;
+}
+
 .landing-mockup {
   position: relative;
   width: 100%;
