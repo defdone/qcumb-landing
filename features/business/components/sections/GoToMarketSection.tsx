@@ -24,7 +24,7 @@ export default function GoToMarketSection() {
               <li>Composable APIs for developers</li>
             </ul>
             <div className="landing-demo-connect">
-              <Link className="landing-cta-primary" href="/login">
+              <Link className="landing-cta-primary" href="/home">
                 View product demo
               </Link>
             </div>

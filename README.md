@@ -11,7 +11,7 @@ qcumb is a Next.js app that combines:
 - entitlement-aware content access
 - creator/fan flows driven by a real backend
 
-The UI lives in `/home` (app feed) and `/login` (wallet login). The landing page is served from `/` via the business layout.
+The UI lives in `/home` (app feed). The landing page is served from `/` via the business layout.
 
 ## What Works
 
@@ -34,7 +34,6 @@ The UI lives in `/home` (app feed) and `/login` (wallet login). The landing page
 ```text
 Next.js App Router
 ├── /(business)         -> Landing page
-├── /login              -> Wallet login
 └── /home/*             -> App (Wouter inside)
 ```
 
@@ -51,7 +50,7 @@ Next.js App Router
 
 ### Auth Flow (wallet session)
 
-1) User connects wallet on `/login`
+1) User connects wallet when unlocking premium content (x402 modal)
 2) Frontend requests nonce from backend (`POST /wallet/nonce`)
 3) User signs message in wallet
 4) Frontend verifies signature (`POST /wallet/verify`)
@@ -110,7 +109,6 @@ Next.js App Router
 ## Routes
 
 - `/`            -> landing page (business)
-- `/login`       -> wallet login
 - `/home`        -> app feed
 - `/home/*`      -> internal app routes (Wouter)
 
@@ -140,7 +138,6 @@ Next.js App Router
 ```text
 app/
   (business)/            Landing page
-  login/                 Wallet login
   home/                  App entry (AppClient)
 features/
   app/                   Wouter app + UI

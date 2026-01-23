@@ -64,6 +64,11 @@ const loadSession = (): WalletSession | null => {
   return null
 }
 
+const notifySessionChange = () => {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new Event('wallet-session-updated'))
+}
+
 // Save session to localStorage
 const saveSession = (session: WalletSession | null) => {
   if (session) {
@@ -71,6 +76,7 @@ const saveSession = (session: WalletSession | null) => {
   } else {
     localStorage.removeItem(STORAGE_KEY)
   }
+  notifySessionChange()
 }
 
 export const useWalletSession = (): UseWalletSessionResult => {

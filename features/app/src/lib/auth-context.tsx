@@ -4,7 +4,7 @@ import { fetchProfile, setRole as setRoleApi } from "./posts-api";
 
 interface AuthContextType {
   currentUser: CurrentUser | null;
-  login: (user: User) => void;
+  connect: (user: User) => void;
   logout: () => void;
   setRole: (role: "fan" | "creator" | "admin") => Promise<void>;
   isAuthenticated: boolean;
@@ -22,7 +22,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    const sessionToken = (() => {
+    let initialized = false;
+
+    const readSessionToken = () => {
       try {
         const raw = localStorage.getItem("x402_wallet_session");
         if (!raw) return null;
@@ -31,11 +33,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         return null;
       }
-    })();
+    };
 
-    setHasSession(!!sessionToken);
+    const syncSession = () => {
+      const sessionToken = readSessionToken();
+      setHasSession(!!sessionToken);
 
-    if (sessionToken) {
+      if (!sessionToken) {
+        setCurrentUser(null);
+        if (!initialized) {
+          initialized = true;
+          if (mounted) setIsReady(true);
+        }
+        return;
+      }
+
       fetchProfile()
         .then((profile) => {
           if (!mounted) return;
@@ -49,18 +61,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         .catch(() => {})
         .finally(() => {
-          if (mounted) setIsReady(true);
+          if (!initialized) {
+            initialized = true;
+            if (mounted) setIsReady(true);
+          }
         });
-    } else {
-      setIsReady(true);
-    }
+    };
+
+    syncSession();
+    window.addEventListener("wallet-session-updated", syncSession);
 
     return () => {
       mounted = false;
+      window.removeEventListener("wallet-session-updated", syncSession);
     };
   }, []);
 
-  const login = useCallback((user: User) => {
+  const connect = useCallback((user: User) => {
     const sessionUser: CurrentUser = {
       id: user.id,
       username: user.username,
@@ -89,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthContextType = {
     currentUser,
-    login,
+    connect,
     logout,
     setRole,
     isAuthenticated: hasSession,

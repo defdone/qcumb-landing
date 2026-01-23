@@ -1,36 +1,74 @@
 "use client"
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import App from '../../features/app/src/App'
-import { useWalletSession } from '../../features/auth/hooks/use-wallet-session'
-
-const SIGNED_IN_KEY = 'qcumb_signed_in_v1'
+import { useEffect, useState } from "react"
+import Image from "next/image"
+import App from "../../features/app/src/App"
+import { useWalletSession } from "../../features/auth/hooks/use-wallet-session"
+import { queryClient } from "../../features/app/src/lib/queryClient"
 
 export default function AppClient() {
-  const router = useRouter()
-  const { isAuthenticated, isVerifyingSession } = useWalletSession()
-  const [hasSignedIn, setHasSignedIn] = useState(() => {
-    try {
-      return localStorage.getItem(SIGNED_IN_KEY) !== null
-    } catch {
-      return false
-    }
-  })
+  const { isVerifyingSession } = useWalletSession()
+  const [showSplash, setShowSplash] = useState(true)
+  const [initialSplashDone, setInitialSplashDone] = useState(false)
+  const [isFetching, setIsFetching] = useState(() => queryClient.isFetching())
+  const [hasStartedFetching, setHasStartedFetching] = useState(false)
 
   useEffect(() => {
-    try {
-      setHasSignedIn(localStorage.getItem(SIGNED_IN_KEY) !== null)
-    } catch {
-      setHasSignedIn(false)
+    const cache = queryClient.getQueryCache()
+    const update = () => {
+      const fetching = queryClient.isFetching()
+      setIsFetching(fetching)
+      if (fetching > 0 || cache.getAll().length > 0) {
+        setHasStartedFetching(true)
+      }
     }
-  }, [isAuthenticated])
+    const unsubscribe = cache.subscribe(update)
+    update()
+    return () => unsubscribe()
+  }, [])
 
   useEffect(() => {
-    if (!isVerifyingSession && (!isAuthenticated || !hasSignedIn)) {
-      router.push('/login')
+    if (isVerifyingSession) return
+
+    let raf1 = 0
+    let raf2 = 0
+    let timeoutId: number | null = null
+
+    const hideSplash = () => {
+      if (initialSplashDone) return
+      raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
+          setShowSplash(false)
+          setInitialSplashDone(true)
+        })
+      })
     }
-  }, [isAuthenticated, isVerifyingSession, hasSignedIn, router])
+
+    const isQueryReady = !hasStartedFetching || isFetching === 0
+
+    if (document.readyState === "complete" && isQueryReady) {
+      hideSplash()
+      return () => {
+        cancelAnimationFrame(raf1)
+        cancelAnimationFrame(raf2)
+        if (timeoutId) window.clearTimeout(timeoutId)
+      }
+    }
+
+    const onReady = () => {
+      if (!hasStartedFetching || queryClient.isFetching() === 0) {
+        hideSplash()
+      }
+    }
+    window.addEventListener("load", onReady, { once: true })
+    timeoutId = window.setTimeout(hideSplash, 8000)
+    return () => {
+      window.removeEventListener("load", onReady)
+      cancelAnimationFrame(raf1)
+      cancelAnimationFrame(raf2)
+      if (timeoutId) window.clearTimeout(timeoutId)
+    }
+  }, [isVerifyingSession, hasStartedFetching, isFetching, initialSplashDone])
 
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -46,8 +84,21 @@ export default function AppClient() {
     }
   }, [])
 
-  if (!isAuthenticated || !hasSignedIn) {
-    return null
+  if (!initialSplashDone && (showSplash || isVerifyingSession || (hasStartedFetching && isFetching > 0))) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="flex flex-col items-center gap-6">
+          <Image
+            src="/logoQC - base - H.png"
+            alt="qcumb"
+            width={220}
+            height={60}
+            className="h-auto w-auto animate-pulse"
+            priority
+          />
+        </div>
+      </div>
+    )
   }
 
   return <App />

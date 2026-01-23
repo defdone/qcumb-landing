@@ -1,12 +1,18 @@
+"use client"
+
+import { useRef } from "react"
 import Link from 'next/link'
+import HeroVisual3D from "../HeroVisual3D"
 
 type HeroSectionProps = {
   onScrollToSection: (sectionId: string, e: React.MouseEvent) => void
 }
 
 export default function HeroSection({ onScrollToSection }: HeroSectionProps) {
+  const sectionRef = useRef<HTMLElement>(null)
+
   return (
-    <section className="landing-hero">
+    <section ref={sectionRef} className="landing-hero">
       <div className="landing-hero-bg"></div>
       <div className="landing-hero-content">
         <div className="landing-hero-text landing-animate">
@@ -20,7 +26,7 @@ export default function HeroSection({ onScrollToSection }: HeroSectionProps) {
             turn anonymous visitors into customers.
           </p>
           <div className="landing-hero-cta">
-            <Link className="landing-cta-primary" href="/login">
+            <Link className="landing-cta-primary" href="/home">
               Feel the flow
             </Link>
             <a
@@ -51,53 +57,7 @@ export default function HeroSection({ onScrollToSection }: HeroSectionProps) {
           </div>
         </div>
         <div className="landing-hero-visual landing-animate">
-          <div className="landing-mockup">
-            <div className="landing-mockup-glow"></div>
-            <div className="landing-mockup-header">
-              <div className="landing-mockup-browser-controls">
-                <div className="landing-mockup-browser-dots">
-                  <span className="landing-mockup-dot landing-mockup-dot-close">
-                    <span className="landing-mockup-dot-icon">×</span>
-                  </span>
-                  <span className="landing-mockup-dot landing-mockup-dot-minimize">
-                    <span className="landing-mockup-dot-icon">−</span>
-                  </span>
-                  <span className="landing-mockup-dot landing-mockup-dot-maximize">
-                    <span className="landing-mockup-dot-icon">⤢</span>
-                  </span>
-                </div>
-                <div className="landing-mockup-browser-bar">
-                  <div className="landing-mockup-browser-icons">
-                    <span className="landing-mockup-browser-icon">←</span>
-                    <span className="landing-mockup-browser-icon">→</span>
-                    <span className="landing-mockup-browser-icon">↻</span>
-                  </div>
-                  <div className="landing-mockup-browser-url">qcumb.com/app</div>
-                  <div className="landing-mockup-browser-menu">⋮</div>
-                </div>
-              </div>
-            </div>
-            <div className="landing-mockup-content">
-              <div className="landing-mockup-card">
-                <div className="landing-mockup-card-preview">
-                  <div className="landing-mockup-card-overlay"></div>
-                </div>
-                <div className="landing-mockup-card-info">
-                  <div className="landing-mockup-card-title">Premium Video</div>
-                  <div className="landing-mockup-card-status">Access granted</div>
-                </div>
-              </div>
-              <div className="landing-mockup-card">
-                <div className="landing-mockup-card-preview locked">
-                  <div className="landing-mockup-card-overlay"></div>
-                </div>
-                <div className="landing-mockup-card-info">
-                  <div className="landing-mockup-card-title">Premium Video</div>
-                  <div className="landing-mockup-card-status locked">Locked</div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <HeroVisual3D sectionRef={sectionRef} />
         </div>
       </div>
     </section>

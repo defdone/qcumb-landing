@@ -1,11 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Wallet, CheckCircle2, AlertCircle } from "lucide-react";
+import { ConnectKitButton } from "connectkit";
 import { useX402Payment, type PlanType } from "@/hooks/use-x402-payment";
 import { formatPrice } from "@/lib/formatters";
+import { useWalletSession } from "../../../auth/hooks/use-wallet-session";
 
 interface X402PaymentModalProps {
   isOpen: boolean;
@@ -48,16 +50,18 @@ export function X402PaymentModal({
     error,
     pricing,
     selectedPlan,
-    connectWallet,
     requestPayment,
     executePayment,
     resetPayment,
     setSelectedPlan,
   } = useX402Payment();
+  const { isAuthenticated, isAuthenticating, authenticate } = useWalletSession();
+  const [authRequested, setAuthRequested] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
     resetPayment();
+    setAuthRequested(false);
   }, [isOpen, resetPayment]);
 
   useEffect(() => {
@@ -72,7 +76,15 @@ export function X402PaymentModal({
     }
   }, [paymentStatus, onSuccess, onClose]);
 
-  const isProcessing = ["requesting", "signing", "settling", "connecting"].includes(paymentStatus);
+  useEffect(() => {
+    if (!isOpen || !walletAddress || isAuthenticated || isAuthenticating || authRequested) return;
+    setAuthRequested(true);
+    authenticate(walletAddress).catch(() => {});
+  }, [isOpen, walletAddress, isAuthenticated, isAuthenticating, authRequested, authenticate]);
+
+  const isProcessing = ["signing", "settling"].includes(paymentStatus);
+  const isConnecting = paymentStatus === "connecting";
+  const isRequesting = paymentStatus === "requesting";
 
   const handlePay = async () => {
     await executePayment(getSessionHeader());
@@ -129,11 +141,15 @@ export function X402PaymentModal({
                       </div>
 
           {!walletAddress ? (
-            <Button onClick={connectWallet} className="w-full" disabled={isProcessing}>
-              Connect wallet
-                      </Button>
+            <ConnectKitButton.Custom>
+              {({ show }) => (
+                <Button type="button" onClick={show} className="w-full" disabled={isConnecting}>
+                  {isConnecting ? "Connecting..." : "Connect wallet"}
+                </Button>
+              )}
+            </ConnectKitButton.Custom>
           ) : (
-            <Button onClick={handlePay} className="w-full glow-primary" disabled={isProcessing || !paymentRequirements}>
+            <Button type="button" onClick={handlePay} className="w-full glow-primary" disabled={isProcessing || isRequesting || !paymentRequirements}>
               {isProcessing ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

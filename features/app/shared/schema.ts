@@ -6,7 +6,7 @@ export type UserRole = typeof userRoles[number];
 export const userSchema = z.object({
   id: z.string(),
   username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().optional(), // Wallet login - no password required
+  password: z.string().optional(), // Wallet connect - no password required
   role: z.enum(userRoles),
   bio: z.string().optional(),
   tags: z.array(z.string()).optional(),
@@ -151,11 +151,11 @@ export const currentUserSchema = z.object({
 
 export type CurrentUser = z.infer<typeof currentUserSchema>;
 
-export const loginSchema = z.object({
+export const connectSchema = z.object({
   username: z.string().min(1, "Username is required"),
 });
 
-export type LoginData = z.infer<typeof loginSchema>;
+export type ConnectData = z.infer<typeof connectSchema>;
 
 export const registerSchema = insertUserSchema.extend({
   username: z.string().min(3, "Username must be at least 3 characters"),

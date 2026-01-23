@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
+import { useAccount, useDisconnect } from "wagmi";
+import { ConnectKitButton } from "connectkit";
+import { useWalletSession } from "@/../../features/auth/hooks/use-wallet-session";
 import { t } from "@/lib/strings";
 import { getInitials } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
@@ -19,13 +22,28 @@ import { LogOut, Settings, ChevronDown, ShoppingBag, Home, Compass, LayoutDashbo
 
 export function Navbar() {
   const { currentUser, logout, isAuthenticated, isFan, isCreator } = useAuth();
+  const { disconnect } = useDisconnect();
+  const { address, isConnected } = useAccount();
+  const { logout: logoutWalletSession, authenticate, isAuthenticating } = useWalletSession();
   const isAdmin = currentUser?.role === "admin";
   const [location, setLocation] = useLocation();
 
-  const handleLogout = () => {
+  useEffect(() => {
+    if (!isConnected || !address) return;
+    if (isAuthenticated || isAuthenticating) return;
+    authenticate(address).catch(() => {});
+  }, [isConnected, address, isAuthenticated, isAuthenticating, authenticate]);
+
+  const handleLogout = async () => {
+    try {
+      disconnect();
+    } catch {}
+    try {
+      await logoutWalletSession();
+    } catch {}
     logout();
     if (typeof window !== "undefined") {
-      window.location.href = "/login";
+      window.location.href = "/home";
     }
   };
 
@@ -33,60 +51,61 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
-      <div className="flex h-16 items-center justify-between gap-4 px-4 md:px-6 max-w-[1600px] mx-auto">
+      <div className="grid h-16 items-center gap-4 px-4 md:px-6 max-w-[1600px] mx-auto grid-cols-[1fr_auto_1fr]">
         {/* Logo */}
-        <Link href={isAuthenticated ? (isAdmin ? "/admin" : (currentUser?.role === "creator" ? "/creator" : "/")) : "/"}>
-          <div className="flex items-center gap-2 cursor-pointer group" data-testid="link-logo">
-            <Image
-              src="/logoQC - sign.png"
-              alt="qcumb"
-              width={36}
-              height={36}
-              className="h-9 w-9 transition-transform group-hover:scale-105"
-            />
-            <span className="text-xl font-bold tracking-tight hidden sm:block text-foreground">
-              qcumb
-            </span>
-          </div>
-        </Link>
+        <div className="flex items-center">
+          <Link href={isAuthenticated ? (isAdmin ? "/admin" : (currentUser?.role === "creator" ? "/creator" : "/")) : "/"}>
+            <div className="flex items-center gap-2 cursor-pointer group" data-testid="link-logo">
+              <Image
+                src="/logoQC - base - H.png"
+                alt="qcumb"
+                width={120}
+                height={36}
+                className="h-9 w-auto transition-transform group-hover:scale-105"
+              />
+            </div>
+          </Link>
+        </div>
 
         {/* Center Navigation for authenticated users (nie dla admina) */}
-        {isAuthenticated && !isAdmin && (
-          <nav className="hidden md:flex items-center gap-1">
-            {isCreator && (
-              <Link href="/creator">
+        <div className="hidden md:flex items-center justify-center w-full">
+          {isAuthenticated && !isAdmin && (
+            <nav className="flex items-center gap-1">
+              {isCreator && (
+                <Link href="/creator">
+                  <Button 
+                    variant={isActive("/creator") ? "secondary" : "ghost"}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    {t.nav.dashboard}
+                  </Button>
+                </Link>
+              )}
+              <Link href="/">
                 <Button 
-                  variant={isActive("/creator") ? "secondary" : "ghost"}
+                  variant={isActive("/") ? "secondary" : "ghost"} 
                   size="sm"
                   className="gap-2"
                 >
-                  <LayoutDashboard className="h-4 w-4" />
-                  {t.nav.dashboard}
+                  <Home className="h-4 w-4" />
+                  {t.nav.feed}
                 </Button>
               </Link>
-            )}
-            <Link href="/">
-              <Button 
-                variant={isActive("/") ? "secondary" : "ghost"} 
-                size="sm"
-                className="gap-2"
-              >
-                <Home className="h-4 w-4" />
-                {t.nav.feed}
-              </Button>
-            </Link>
-            <Link href="/explore">
-              <Button 
-                variant={isActive("/explore") ? "secondary" : "ghost"}
-                size="sm"
-                className="gap-2"
-              >
-                <Compass className="h-4 w-4" />
-                {t.nav.discover}
-              </Button>
-            </Link>
-          </nav>
-        )}
+              <Link href="/explore">
+                <Button 
+                  variant={isActive("/explore") ? "secondary" : "ghost"}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Compass className="h-4 w-4" />
+                  {t.nav.discover}
+                </Button>
+              </Link>
+            </nav>
+          )}
+        </div>
         
         {/* Admin navigation */}
         {isAuthenticated && isAdmin && (
@@ -108,7 +127,7 @@ export function Navbar() {
         )}
 
         {/* Right side */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 justify-end w-full">
           {isAuthenticated && currentUser ? (
             <div className="flex items-center gap-3">
               {isCreator && !isAdmin && (
@@ -229,11 +248,13 @@ export function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/login">
-                <Button className="glow-primary" data-testid="link-login">
-                  {t.nav.login}
-                </Button>
-              </Link>
+              <ConnectKitButton.Custom>
+                {({ show }) => (
+                  <Button className="glow-primary" data-testid="link-connect" type="button" onClick={show}>
+                    Connect wallet
+                  </Button>
+                )}
+              </ConnectKitButton.Custom>
             </div>
           )}
         </div>

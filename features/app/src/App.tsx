@@ -31,10 +31,7 @@ function ProtectedRoute({
   }
 
   if (!isAuthenticated) {
-    if (typeof window !== "undefined") {
-      window.location.href = "/login";
-    }
-    return null;
+    return <Redirect to="/" />;
   }
 
   if (allowedRoles && currentUser && !allowedRoles.includes(currentUser.role)) {
@@ -63,26 +60,17 @@ function Router() {
       <Route path="/fan">
         <Redirect to="/" />
       </Route>
-      <Route path="/explore">
-        <ProtectedRoute component={FanView} allowedRoles={["fan", "creator"]} />
-      </Route>
-      <Route path="/creator/:id">
-        <ProtectedRoute component={CreatorProfile} allowedRoles={["fan", "creator"]} />
-      </Route>
+      <Route path="/explore" component={FanView} />
+      <Route path="/creator/:id" component={CreatorProfile} />
       <Route path="/settings">
         <ProtectedRoute component={SettingsPage} />
       </Route>
       <Route path="/purchases">
         <ProtectedRoute component={Purchases} allowedRoles={["fan", "creator"]} />
       </Route>
-      <Route path="/post/:id">
-        <ProtectedRoute component={PostView} allowedRoles={["fan", "creator"]} />
-      </Route>
+      <Route path="/post/:id" component={PostView} />
       <Route path="/admin">
         <ProtectedRoute component={AdminPanel} allowedRoles={["admin"]} />
-      </Route>
-      <Route path="/login">
-        <Redirect to="/login" />
       </Route>
       <Route component={NotFound} />
     </Switch>

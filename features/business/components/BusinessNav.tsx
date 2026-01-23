@@ -16,7 +16,7 @@ export default function BusinessNav({ onLogoClick }: BusinessNavProps) {
           />
         </div>
         <div className="landing-nav-actions">
-          <Link className="landing-nav-cta" href="/login">
+          <Link className="landing-nav-cta" href="/home">
             Feel the flow
           </Link>
         </div>
