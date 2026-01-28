@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { fetchPosts, uploadCreatorPost, fetchStreamAccess, type FeedPost } from "@/lib/posts-api";
+import { API_URL } from "@/lib/posts-api";
 import { t } from "@/lib/strings";
 import { formatPrice, formatTimeAgo } from "@/lib/formatters";
 import { queryKeys } from "@/lib/query-keys";
@@ -66,11 +67,10 @@ export default function CreatorDashboard() {
       }
       fetchStreamAccess(post.id)
         .then((response) => {
-          if (!response?.url) return;
+          const url = response?.url;
+          if (!url) return;
           setPostsWithMedia((prev) =>
-            prev.map((item) =>
-              item.id === post.id ? { ...item, previewUrl: response.url } : item
-            )
+            prev.map((item) => (item.id === post.id ? { ...item, previewUrl: url } : item))
           );
         })
         .catch(() => {
@@ -180,6 +180,33 @@ export default function CreatorDashboard() {
     return { total, premium, free };
   }, [postsWithMedia]);
 
+  const [creatorEarningsUsd, setCreatorEarningsUsd] = useState<number | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchEarnings() {
+      if (!currentUser?.id) return;
+      try {
+        const url = `${API_URL}/api/creator-earnings?wallet=${encodeURIComponent(currentUser.id)}`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          setCreatorEarningsUsd(0);
+          return;
+        }
+        const body = await res.json();
+        if (mounted) {
+          setCreatorEarningsUsd(typeof body.earningsUsd === "number" ? body.earningsUsd : 0);
+        }
+      } catch {
+        if (mounted) setCreatorEarningsUsd(0);
+      }
+    }
+    fetchEarnings();
+    return () => {
+      mounted = false;
+    };
+  }, [currentUser?.id]);
+
   return (
     <div className="min-h-[calc(100vh-4rem)] p-6">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -225,8 +252,10 @@ export default function CreatorDashboard() {
                 <DollarSign className="h-5 w-5 text-green-500" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.free}</p>
-                <p className="text-sm text-muted-foreground">Free</p>
+                <p className="text-2xl font-bold">
+                  {creatorEarningsUsd === null ? "—" : formatPrice(creatorEarningsUsd)}
+                </p>
+                <p className="text-sm text-muted-foreground">Total earnings (USD)</p>
               </div>
             </CardContent>
           </Card>
