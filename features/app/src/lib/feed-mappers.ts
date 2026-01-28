@@ -16,7 +16,7 @@ export const toPostFromFeed = (post: FeedPost): Post => ({
   id: post.id,
   creatorId: post.creatorWallet || "unknown",
   title: post.title,
-  description: post.description,
+  description: post.description ?? "",
   mediaUrl: post.previewUrl,
   isPremium: (post.pricing?.["24h"]?.price ?? 0) > 0,
   postPrice: post.pricing?.["24h"]?.price ?? 0,
