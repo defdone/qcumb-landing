@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { fetchPosts, fetchPurchases, type FeedPost } from "@/lib/posts-api";
+import { fetchPosts, fetchPurchases, fetchStreamAccess, type FeedPost } from "@/lib/posts-api";
 import { useAuth } from "@/lib/auth-context";
 import { t, translatePost } from "@/lib/strings";
 import { formatPrice, formatTimeAgo } from "@/lib/formatters";
@@ -44,6 +44,7 @@ export default function FanHome() {
   const [allTags, setAllTags] = useState<string[]>([]);
   const [justUnlocked, setJustUnlocked] = useState<Set<string>>(new Set());
   const unlockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const streamFetchRef = useRef<Set<string>>(new Set());
   const queryClient = useQueryClient();
   
   // x402 Payment Modal
@@ -242,10 +243,48 @@ export default function FanHome() {
   const isUnlocked = (post: PostWithCreator) => {
     if (!post.isPremium) return true;
     // Subskrypcje usunięte
-    return purchasedPosts.has(post.id);
+    const ownerId = currentUser?.id?.toLowerCase();
+    const isOwner =
+      !!ownerId &&
+      (post.creator.id.toLowerCase() === ownerId ||
+        (post.mediaUrl?.toLowerCase().includes(ownerId) ?? false));
+    return isOwner || purchasedPosts.has(post.id);
   };
 
   const timeAgo = (createdAt?: string) => formatTimeAgo(createdAt, t.fanHome.hoursAgo);
+
+  useEffect(() => {
+    if (!currentUser || posts.length === 0) return;
+    const unlockedPosts = posts.filter((post) => isUnlocked(post));
+
+    unlockedPosts.forEach((post) => {
+      if (streamFetchRef.current.has(post.id)) return;
+      const ownerId = currentUser?.id?.toLowerCase();
+      const isOwner =
+        !!ownerId &&
+        (post.creator.id.toLowerCase() === ownerId ||
+          (post.mediaUrl?.toLowerCase().includes(ownerId) ?? false));
+      if (!isOwner && !post.isPremium) return;
+      streamFetchRef.current.add(post.id);
+      if (process.env.NODE_ENV === "development") {
+        console.log("[stream-access] feed", {
+          postId: post.id,
+          isOwner,
+          previewUrl: post.mediaUrl,
+        });
+      }
+      fetchStreamAccess(post.id)
+        .then((response) => {
+          if (!response?.url) return;
+          setPosts((prev) =>
+            prev.map((item) => (item.id === post.id ? { ...item, mediaUrl: response.url } : item))
+          );
+        })
+        .catch(() => {
+          streamFetchRef.current.delete(post.id);
+        });
+    });
+  }, [currentUser, posts, purchasedPosts]);
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">

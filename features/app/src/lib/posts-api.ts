@@ -28,7 +28,7 @@ const getSessionHeader = (): Record<string, string> => {
 export type FeedPost = {
   id: string
   title: string
-  description: string
+  description: string | null
   mediaType: 'video' | 'image'
   previewUrl: string
   mimeType: string
@@ -36,10 +36,23 @@ export type FeedPost = {
     '24h': { price: number; priceFormatted: string }
     '7d': { price: number; priceFormatted: string }
   }
-  creatorWallet?: string | null
+  creatorWallet: string | null
   isActive: boolean
   createdAt: string
 }
+
+export type StreamAccessResponse = {
+  success: boolean
+  url?: string
+  ownerAccess?: boolean
+  entitlement?: unknown | null
+  mediaType?: string
+  mimeType?: string
+}
+
+const streamAccessCache = new Map<string, { url: string; expiresAt: number }>()
+const streamAccessInFlight = new Map<string, Promise<StreamAccessResponse>>()
+const STREAM_ACCESS_TTL_MS = 2 * 60_000
 
 export async function fetchPosts(params?: {
   active?: boolean
@@ -62,6 +75,49 @@ export async function fetchPost(id: string) {
   if (!res.ok) throw new Error(`Failed to fetch post: ${res.status}`)
   const data = await res.json()
   return data.post as FeedPost
+}
+
+export async function fetchStreamAccess(assetId: string) {
+  const sessionHeader = getSessionHeader()
+  if (!sessionHeader['X-Wallet-Session']) {
+    throw new Error('Wallet authentication required')
+  }
+
+  const cached = streamAccessCache.get(assetId)
+  if (cached && cached.expiresAt > Date.now()) {
+    return { success: true, url: cached.url } satisfies StreamAccessResponse
+  }
+
+  const existing = streamAccessInFlight.get(assetId)
+  if (existing) return existing
+
+  const request = (async () => {
+  const res = await fetch(`${API_URL}/stream/access/${assetId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...sessionHeader,
+    },
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.error || `Stream access failed: ${res.status}`)
+  }
+
+  const data = (await res.json()) as StreamAccessResponse
+  if (data.url) {
+    streamAccessCache.set(assetId, { url: data.url, expiresAt: Date.now() + STREAM_ACCESS_TTL_MS })
+  }
+  return data
+  })()
+
+  streamAccessInFlight.set(assetId, request)
+  try {
+    return await request
+  } finally {
+    streamAccessInFlight.delete(assetId)
+  }
 }
 
 export async function fetchProfile() {
@@ -131,6 +187,46 @@ export async function createPost(payload: {
     body: JSON.stringify(payload),
   })
   if (!res.ok) throw new Error(`Failed to create post: ${res.status}`)
+  const data = await res.json()
+  return data.post as FeedPost
+}
+
+export async function uploadCreatorPost(payload: {
+  id?: string
+  title: string
+  description?: string
+  type: 'video' | 'image'
+  priceUsd24h: number
+  priceUsd7d: number
+  protectedFile: File
+}) {
+  const sessionHeader = getSessionHeader()
+  if (!sessionHeader['X-Wallet-Session']) {
+    throw new Error('Wallet authentication required')
+  }
+
+  const formData = new FormData()
+  if (payload.id) formData.append('id', payload.id)
+  formData.append('title', payload.title)
+  if (payload.description) formData.append('description', payload.description)
+  formData.append('type', payload.type)
+  formData.append('priceUsd24h', String(payload.priceUsd24h))
+  formData.append('priceUsd7d', String(payload.priceUsd7d))
+  formData.append('protected', payload.protectedFile)
+
+  const res = await fetch(`${API_URL}/posts/upload`, {
+    method: 'POST',
+    headers: {
+      ...sessionHeader,
+    },
+    body: formData,
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.error || `Upload failed: ${res.status}`)
+  }
+
   const data = await res.json()
   return data.post as FeedPost
 }

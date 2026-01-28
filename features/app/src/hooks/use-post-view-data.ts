@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Post } from "@shared/schema";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchPost, fetchPurchases } from "@/lib/posts-api";
+import { fetchPost, fetchPurchases, fetchStreamAccess } from "@/lib/posts-api";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { t } from "@/lib/strings";
@@ -48,8 +48,34 @@ export function usePostViewData(id?: string) {
   useEffect(() => {
     if (!id) return;
     const activeIds = purchasesQuery.data?.active.map((p) => p.assetId) ?? [];
-    setIsUnlocked(activeIds.includes(id));
-  }, [id, purchasesQuery.data]);
+    const creatorWallet = postQuery.data?.creatorWallet || "unknown";
+    const ownerId = currentUser?.id?.toLowerCase();
+    const isOwner =
+      !!ownerId &&
+      (creatorWallet.toLowerCase() === ownerId ||
+        (postQuery.data?.previewUrl?.toLowerCase().includes(ownerId) ?? false));
+    const purchased = activeIds.includes(id);
+    setIsUnlocked(isOwner || purchased);
+
+    if (!postQuery.data) return;
+    const isPremium = (postQuery.data.pricing?.["24h"]?.price ?? 0) > 0;
+    if (!currentUser) return;
+    if (!isOwner && (!purchased || !isPremium)) return;
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("[stream-access] post-view", {
+        postId: id,
+        isOwner,
+        previewUrl: postQuery.data?.previewUrl,
+      });
+    }
+    fetchStreamAccess(id)
+      .then((response) => {
+        if (!response?.url) return;
+        setPost((prev) => (prev ? { ...prev, mediaUrl: response.url } : prev));
+      })
+      .catch(() => {});
+  }, [id, purchasesQuery.data, currentUser, postQuery.data]);
 
   const openPaymentModal = () => setShowX402Modal(true);
   const closePaymentModal = () => setShowX402Modal(false);

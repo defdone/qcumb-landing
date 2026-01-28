@@ -5,27 +5,21 @@ import Image from "next/image"
 import App from "../../features/app/src/App"
 import { useWalletSession } from "../../features/auth/hooks/use-wallet-session"
 import { queryClient } from "../../features/app/src/lib/queryClient"
+import { useIsFetching } from "@tanstack/react-query"
 
 export default function AppClient() {
   const { isVerifyingSession } = useWalletSession()
   const [showSplash, setShowSplash] = useState(true)
   const [initialSplashDone, setInitialSplashDone] = useState(false)
-  const [isFetching, setIsFetching] = useState(() => queryClient.isFetching())
+  const isFetching = useIsFetching()
   const [hasStartedFetching, setHasStartedFetching] = useState(false)
 
   useEffect(() => {
     const cache = queryClient.getQueryCache()
-    const update = () => {
-      const fetching = queryClient.isFetching()
-      setIsFetching(fetching)
-      if (fetching > 0 || cache.getAll().length > 0) {
-        setHasStartedFetching(true)
-      }
+    if (isFetching > 0 || cache.getAll().length > 0) {
+      setHasStartedFetching(true)
     }
-    const unsubscribe = cache.subscribe(update)
-    update()
-    return () => unsubscribe()
-  }, [])
+  }, [isFetching])
 
   useEffect(() => {
     if (isVerifyingSession) return

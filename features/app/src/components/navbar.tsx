@@ -21,18 +21,19 @@ import {
 import { LogOut, Settings, ChevronDown, ShoppingBag, Home, Compass, LayoutDashboard, Plus, Shield } from "lucide-react";
 
 export function Navbar() {
-  const { currentUser, logout, isAuthenticated, isFan, isCreator } = useAuth();
+  const { currentUser, logout, isAuthenticated, isFan, isCreator, isReady } = useAuth();
   const { disconnect } = useDisconnect();
   const { address, isConnected } = useAccount();
-  const { logout: logoutWalletSession, authenticate, isAuthenticating } = useWalletSession();
+  const { logout: logoutWalletSession, authenticate, isAuthenticating, session } = useWalletSession();
   const isAdmin = currentUser?.role === "admin";
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
+    if (!isReady) return;
     if (!isConnected || !address) return;
-    if (isAuthenticated || isAuthenticating) return;
+    if (isAuthenticated || isAuthenticating || session) return;
     authenticate(address).catch(() => {});
-  }, [isConnected, address, isAuthenticated, isAuthenticating, authenticate]);
+  }, [isReady, isConnected, address, isAuthenticated, isAuthenticating, session, authenticate]);
 
   const handleLogout = async () => {
     try {

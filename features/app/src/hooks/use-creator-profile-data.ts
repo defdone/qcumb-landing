@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { User } from "@shared/schema";
 import type { PostWithMedia } from "@/lib/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchPosts, fetchPurchases, type FeedPost } from "@/lib/posts-api";
+import { fetchPosts, fetchPurchases, fetchStreamAccess, type FeedPost } from "@/lib/posts-api";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { t, translatePost } from "@/lib/strings";
@@ -20,6 +20,7 @@ export function useCreatorProfileData(id?: string) {
   const [posts, setPosts] = useState<PostWithMedia[]>([]);
   const [purchasedPosts, setPurchasedPosts] = useState<Set<string>>(new Set());
   const [unlocking, setUnlocking] = useState<string | null>(null);
+  const streamFetchRef = useState(() => new Set<string>())[0];
   const [filter, setFilter] = useState<FilterType>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [x402Modal, setX402Modal] = useState<{
@@ -109,10 +110,50 @@ export function useCreatorProfileData(id?: string) {
   const isUnlocked = useCallback(
     (post: PostWithMedia) => {
       if (!post.isPremium) return true;
-      return purchasedPosts.has(post.id);
+      const ownerId = currentUser?.id?.toLowerCase();
+      const isOwner =
+        !!ownerId &&
+        !!creator?.id &&
+        (creator.id.toLowerCase() === ownerId ||
+          (post.mediaUrl?.toLowerCase().includes(ownerId) ?? false));
+      return isOwner || purchasedPosts.has(post.id);
     },
-    [purchasedPosts]
+    [purchasedPosts, currentUser, creator]
   );
+
+  useEffect(() => {
+    if (!currentUser || posts.length === 0) return;
+    const unlockedPosts = posts.filter((post) => isUnlocked(post));
+
+    unlockedPosts.forEach((post) => {
+      if (streamFetchRef.has(post.id)) return;
+      const ownerId = currentUser?.id?.toLowerCase();
+      const isOwner =
+        !!ownerId &&
+        !!creator?.id &&
+        (creator.id.toLowerCase() === ownerId ||
+          (post.mediaUrl?.toLowerCase().includes(ownerId) ?? false));
+      if (!isOwner && !post.isPremium) return;
+      streamFetchRef.add(post.id);
+      if (process.env.NODE_ENV === "development") {
+        console.log("[stream-access] creator-profile", {
+          postId: post.id,
+          isOwner,
+          previewUrl: post.mediaUrl,
+        });
+      }
+      fetchStreamAccess(post.id)
+        .then((response) => {
+          if (!response?.url) return;
+          setPosts((prev) =>
+            prev.map((item) => (item.id === post.id ? { ...item, mediaUrl: response.url } : item))
+          );
+        })
+        .catch(() => {
+          streamFetchRef.delete(post.id);
+        });
+    });
+  }, [currentUser, posts, isUnlocked, streamFetchRef]);
 
   const freeCount = posts.filter((p) => !p.isPremium).length;
   const premiumCount = posts.filter((p) => p.isPremium).length;

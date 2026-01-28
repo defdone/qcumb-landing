@@ -164,6 +164,8 @@ export const useX402Payment = (): UseX402PaymentResult => {
     ): Promise<PaymentRequirements | null> => {
       setPaymentStatus('requesting')
       setError(null)
+      setPaymentRequirements(null)
+      setResourceInfo(null)
       setCurrentMediaId(mediaId)
       setCurrentMediaType(mediaType)
       setCurrentSessionHeader(sessionHeader)
@@ -202,7 +204,10 @@ export const useX402Payment = (): UseX402PaymentResult => {
             })
           }
 
-          const requirements = data.paymentRequired.accepts[0]
+          const requirements = data.paymentRequired?.accepts?.[0]
+          if (!requirements?.payTo) {
+            throw new Error('Missing payment recipient in payment requirements')
+          }
           setPaymentRequirements(requirements)
           setResourceInfo(data.paymentRequired.resource)
           setPaymentStatus('idle')
